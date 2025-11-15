@@ -11,23 +11,113 @@ datasource db {
 }
 
 // ========================================
-// MODELOS
+// MODELOS - AUTENTICACIÓN Y MULTI-TENANT
 // ========================================
 
-// Usuario del sistema (equipo interno)
+// Usuario del sistema (con autenticación)
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
   name      String
+  password  String   // Hash bcrypt
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  // Relaciones
+  organizations UserOrganization[]
+  accounts      Account[]
+  sessions      Session[]
 
   @@map("users")
 }
 
+// Organización (multi-tenant)
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique // URL-friendly identifier
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relaciones
+  users         UserOrganization[]
+  clients       Client[]
+  services      Service[]
+  cashMovements CashMovement[]
+  dailyCloses   DailyClose[]
+
+  @@index([slug])
+  @@map("organizations")
+}
+
+// Tabla pivot: Usuarios en Organizaciones (con roles)
+model UserOrganization {
+  id             String   @id @default(cuid())
+  userId         String
+  organizationId String
+  role           UserRole @default(MEMBER)
+  createdAt      DateTime @default(now())
+
+  // Relaciones
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, organizationId])
+  @@index([userId])
+  @@index([organizationId])
+  @@map("user_organizations")
+}
+
+// NextAuth - Account
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+// NextAuth - Session
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+// NextAuth - Verification Token
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// ========================================
+// MODELOS - NEGOCIO
+// ========================================
+
 // Cliente que contrata servicios
 model Client {
   id             String    @id @default(cuid())
+  organizationId String    // Multi-tenant
   name           String
   phone          String
   email          String?
@@ -37,15 +127,18 @@ model Client {
   updatedAt      DateTime  @updatedAt
 
   // Relaciones
-  services Service[]
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  services     Service[]
 
   @@index([email])
+  @@index([organizationId])
   @@map("clients")
 }
 
 // Servicio agendado (flete, mudanza, retiro de escombros)
 model Service {
   id               String           @id @default(cuid())
+  organizationId   String           // Multi-tenant
   type             ServiceType
   status           ServiceStatus    @default(PENDIENTE)
   scheduledDate    DateTime
@@ -73,6 +166,9 @@ model Service {
   clientId         String?
   client           Client?          @relation(fields: [clientId], references: [id], onDelete: SetNull)
 
+  // Relación con Organización
+  organization     Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   // Timestamps
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
@@ -82,12 +178,92 @@ model Service {
   @@index([status])
   @@index([type])
   @@index([clientPhone])
+  @@index([organizationId])
   @@map("services")
+}
+
+// ========================================
+// MODELOS - FINANZAS / CAJA
+// ========================================
+
+// Movimiento de caja (ingreso o gasto)
+model CashMovement {
+  id             String              @id @default(cuid())
+  organizationId String              // Multi-tenant
+  type           CashMovementType    // INGRESO o GASTO
+  amount         Float
+  method         PaymentMethod       // EFECTIVO, TRANSFERENCIA_ANDRES, TRANSFERENCIA_HERMANO
+  category       String?             // Categoría del movimiento (ej: "Servicio", "Combustible", "Mantención")
+  description    String?             @db.Text
+  relatedService String?             // ID del servicio relacionado (opcional)
+  date           DateTime            @default(now())
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  // Relación con Organización
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([date])
+  @@index([type])
+  @@index([method])
+  @@map("cash_movements")
+}
+
+// Cierre diario de caja
+model DailyClose {
+  id                     String   @id @default(cuid())
+  organizationId         String   // Multi-tenant
+  date                   DateTime @unique // Fecha del cierre (sin hora)
+
+  // Totales por método de pago
+  totalCash              Float    @default(0) // Total en efectivo
+  totalTransferAndres    Float    @default(0) // Total en transferencias a cuenta Andrés
+  totalTransferHermano   Float    @default(0) // Total en transferencias a cuenta Hermano
+
+  // Gastos del día
+  totalExpenses          Float    @default(0)
+
+  // Caja final del día
+  finalCash              Float    @default(0)
+
+  // Notas del cierre
+  notes                  String?  @db.Text
+
+  // Quien hizo el cierre
+  closedBy               String?  // User ID
+
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  // Relación con Organización
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([date])
+  @@map("daily_closes")
 }
 
 // ========================================
 // ENUMS
 // ========================================
+
+enum UserRole {
+  OWNER  // Dueño de la organización
+  ADMIN  // Administrador
+  MEMBER // Miembro regular
+}
+
+enum CashMovementType {
+  INGRESO
+  GASTO
+}
+
+enum PaymentMethod {
+  EFECTIVO
+  TRANSFERENCIA_ANDRES
+  TRANSFERENCIA_HERMANO
+}
 
 enum ServiceType {
   FLETE

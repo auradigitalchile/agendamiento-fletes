@@ -7,7 +7,8 @@ import timeGridPlugin from "@fullcalendar/timegrid"
 import interactionPlugin from "@fullcalendar/interaction"
 import esLocale from "@fullcalendar/core/locales/es"
 import { Service } from "@/lib/api/services"
-import { getServiceTypeColor, formatPrice } from "@/lib/utils"
+import { formatPrice } from "@/lib/utils"
+import { format } from "date-fns"
 
 interface ServiceCalendarProps {
   services: Service[]
@@ -25,18 +26,18 @@ export function ServiceCalendar({
   // Convertir servicios a eventos de FullCalendar
   const events = services.map((service) => ({
     id: service.id,
-    title: `${service.clientName} - ${service.type}`,
+    title: service.clientName,
     start: service.scheduledDate,
-    backgroundColor: getServiceTypeColor(service.type),
-    borderColor: getServiceTypeColor(service.type),
     extendedProps: {
       service,
+      price: service.price,
+      time: format(new Date(service.scheduledDate), "HH:mm"),
     },
     classNames: [`fc-event-${service.type.toLowerCase()}`],
   }))
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden p-3 sm:p-4">
+    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden calendar-google-style">
       <FullCalendar
         ref={calendarRef}
         plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
@@ -44,7 +45,7 @@ export function ServiceCalendar({
         headerToolbar={{
           left: "prev,next today",
           center: "title",
-          right: "dayGridMonth,timeGridWeek,timeGridDay",
+          right: "dayGridMonth,timeGridWeek",
         }}
         locale={esLocale}
         events={events}
@@ -55,15 +56,13 @@ export function ServiceCalendar({
         }}
         eventContent={(eventInfo) => {
           const service = eventInfo.event.extendedProps.service as Service
+          const time = eventInfo.event.extendedProps.time as string
+
           return (
-            <div className="fc-event-main-frame p-1 cursor-pointer">
-              <div className="fc-event-title-container">
-                <div className="fc-event-title fc-sticky text-xs font-medium truncate">
-                  {service.clientName}
-                </div>
-              </div>
-              <div className="text-xs opacity-90 truncate">
-                {formatPrice(service.price)}
+            <div className="fc-event-content-wrapper">
+              <div className="fc-event-time">{time}</div>
+              <div className="fc-event-title-wrapper">
+                <div className="fc-event-title">{service.clientName}</div>
               </div>
             </div>
           )
@@ -78,11 +77,9 @@ export function ServiceCalendar({
         selectMirror
         dayMaxEvents={3}
         weekends
-        businessHours={{
-          daysOfWeek: [1, 2, 3, 4, 5, 6],
-          startTime: "08:00",
-          endTime: "18:00",
-        }}
+        fixedWeekCount={false}
+        showNonCurrentDates={false}
+        dayHeaderFormat={{ weekday: 'short' }}
       />
     </div>
   )

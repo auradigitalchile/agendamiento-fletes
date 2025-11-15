@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Calendar, Users, Truck, FileText, Menu, X } from "lucide-react"
+import { Calendar, Users, Truck, FileText, Menu, X, Wallet, DollarSign, BarChart3 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
@@ -32,6 +32,24 @@ const routes = [
     icon: Users,
     href: "/clients",
     color: "text-purple-500",
+  },
+  {
+    label: "Caja",
+    icon: Wallet,
+    href: "/caja",
+    color: "text-emerald-500",
+  },
+  {
+    label: "Cierre Diario",
+    icon: DollarSign,
+    href: "/caja/cierre",
+    color: "text-yellow-500",
+  },
+  {
+    label: "Dashboard Finanzas",
+    icon: BarChart3,
+    href: "/caja/dashboard",
+    color: "text-indigo-500",
   },
   {
     label: "Reportes",

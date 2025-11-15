@@ -134,127 +134,246 @@
   }
 }
 
-/* FullCalendar estilos personalizados - Diseño moderno estilo SaaS */
-.fc {
+/* ========================================
+   FULLCALENDAR - ESTILO GOOGLE CALENDAR
+   ======================================== */
+
+/* Container principal */
+.calendar-google-style .fc {
+  font-family: inherit;
   font-size: 0.875rem;
 }
 
-/* Botones del calendario - Estilo minimalista */
-.fc .fc-button {
-  @apply rounded-lg px-3 py-1.5 text-sm font-medium border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-400;
+/* ===== TOOLBAR (Header con controles) ===== */
+.calendar-google-style .fc-toolbar {
+  @apply mb-4 px-4 pt-4;
+}
+
+.calendar-google-style .fc-toolbar-title {
+  @apply text-xl font-normal text-gray-900;
+  letter-spacing: -0.01em;
+}
+
+/* Botones de navegación - Estilo Google Calendar */
+.calendar-google-style .fc .fc-button {
+  @apply h-9 min-w-[36px] px-3 bg-white border-none text-gray-700 rounded-md font-normal;
   text-transform: capitalize;
-  transition: all 0.15s ease;
-  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  box-shadow: none;
+  transition: background-color 0.2s ease;
 }
 
-.fc .fc-button-primary {
-  @apply bg-blue-600 text-white border-blue-600 hover:bg-blue-700 hover:border-blue-700;
+.calendar-google-style .fc .fc-button:hover {
+  @apply bg-gray-100;
 }
 
-.fc .fc-button-active {
-  @apply bg-blue-600 text-white border-blue-600;
+.calendar-google-style .fc .fc-button:active {
+  @apply bg-gray-200;
 }
 
-.fc .fc-button:disabled {
-  @apply opacity-40 cursor-not-allowed hover:bg-white hover:border-gray-300;
-}
-
-.fc .fc-button:focus {
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+.calendar-google-style .fc .fc-button:focus {
+  box-shadow: none;
   outline: none;
 }
 
-/* Título del calendario */
-.fc .fc-toolbar-title {
-  @apply text-lg font-semibold text-gray-900;
+/* Botón "Hoy" - Estilo chip minimalista */
+.calendar-google-style .fc .fc-today-button {
+  @apply border border-gray-300 hover:border-gray-400 hover:bg-white;
+  font-weight: 500;
 }
 
-/* Eventos del calendario - Cards modernos */
-.fc-event {
-  @apply cursor-pointer border-none rounded-md;
-  transition: all 0.15s ease;
+.calendar-google-style .fc .fc-today-button:disabled {
+  @apply opacity-40 cursor-default hover:bg-white hover:border-gray-300;
 }
 
-.fc-event:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+/* Flechas prev/next sin fondo */
+.calendar-google-style .fc .fc-prev-button,
+.calendar-google-style .fc .fc-next-button {
+  @apply hover:bg-gray-100;
 }
 
-/* Colores pastel para tipos de servicio */
-.fc-event-flete {
-  @apply bg-blue-50 text-blue-700 border-l-2 border-blue-600;
+/* Botones de vista (Mes/Semana) */
+.calendar-google-style .fc .fc-button-group {
+  @apply border border-gray-300 rounded-md overflow-hidden;
 }
 
-.fc-event-flete:hover {
-  @apply bg-blue-100;
+.calendar-google-style .fc .fc-button-group .fc-button {
+  @apply border-none rounded-none h-8 min-w-[60px];
+  font-size: 0.8125rem;
 }
 
-.fc-event-mudanza {
-  @apply bg-purple-50 text-purple-700 border-l-2 border-purple-600;
+.calendar-google-style .fc .fc-button-group .fc-button:not(:last-child) {
+  @apply border-r border-gray-300;
 }
 
-.fc-event-mudanza:hover {
-  @apply bg-purple-100;
+.calendar-google-style .fc .fc-button-active {
+  @apply bg-gray-100 text-gray-900 font-medium;
 }
 
-.fc-event-escombros {
-  @apply bg-emerald-50 text-emerald-700 border-l-2 border-emerald-600;
+/* ===== HEADER DE DÍAS ===== */
+.calendar-google-style .fc-col-header {
+  @apply border-b border-gray-200;
 }
 
-.fc-event-escombros:hover {
-  @apply bg-emerald-100;
+.calendar-google-style .fc-col-header-cell {
+  @apply bg-white border-none py-2;
 }
 
-/* Espaciado de eventos */
-.fc-daygrid-event {
-  padding: 3px 6px;
-  margin: 1px 2px;
+.calendar-google-style .fc-col-header-cell-cushion {
+  @apply text-xs font-medium text-gray-600 uppercase;
+  letter-spacing: 0.5px;
 }
 
-.fc-event-title {
-  @apply font-medium;
+/* ===== CELDAS DEL CALENDARIO ===== */
+.calendar-google-style .fc-daygrid-day {
+  @apply bg-white;
+}
+
+.calendar-google-style .fc-daygrid-day-frame {
+  @apply min-h-[100px] md:min-h-[120px];
+}
+
+/* Bordes ultra finos estilo Google Calendar */
+.calendar-google-style .fc-theme-standard td,
+.calendar-google-style .fc-theme-standard th {
+  border: 1px solid #e5e7eb;
+}
+
+.calendar-google-style .fc-theme-standard .fc-scrollgrid {
+  border: none;
+  border-top: 1px solid #e5e7eb;
 }
 
 /* Números de días */
-.fc-daygrid-day-number {
-  @apply text-sm font-medium text-gray-700 p-2;
+.calendar-google-style .fc-daygrid-day-number {
+  @apply text-xs font-normal text-gray-700 py-1 px-2;
+  float: none;
+  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  margin: 2px;
 }
 
-.fc-daygrid-day-top {
-  @apply flex items-center justify-center;
+.calendar-google-style .fc-daygrid-day-top {
+  @apply flex justify-start items-start;
+  flex-direction: row;
 }
 
-/* Día de hoy - Resaltado */
-.fc-day-today {
+/* Día actual - Estilo Google Calendar */
+.calendar-google-style .fc-day-today {
   @apply bg-blue-50/30;
 }
 
-.fc-day-today .fc-daygrid-day-number {
-  @apply text-blue-600 font-semibold;
+.calendar-google-style .fc-day-today .fc-daygrid-day-number {
+  @apply bg-blue-600 text-white rounded-full font-medium;
 }
 
-/* Header de días de la semana */
-.fc-col-header-cell {
-  @apply bg-gray-50/50 border-gray-200;
+/* Días fuera del mes actual */
+.calendar-google-style .fc-day-other .fc-daygrid-day-number {
+  @apply text-gray-400;
 }
 
-.fc-col-header-cell-cushion {
-  @apply text-xs font-semibold text-gray-600 uppercase tracking-wide py-2;
+/* ===== EVENTOS ===== */
+/* Contenedor de eventos */
+.calendar-google-style .fc-daygrid-day-events {
+  @apply mt-1 px-1;
 }
 
-/* Celdas del calendario */
-.fc-daygrid-day {
-  @apply border-gray-200;
+/* Evento individual - Estilo Google Calendar plano */
+.calendar-google-style .fc-event {
+  @apply border-none rounded cursor-pointer mb-0.5;
+  padding: 2px 4px;
+  margin: 1px 2px;
+  box-shadow: none;
+  transition: opacity 0.2s ease;
 }
 
-/* Quitar bordes gruesos por defecto */
-.fc-theme-standard td,
-.fc-theme-standard th {
-  border-color: rgb(229 231 235);
+.calendar-google-style .fc-event:hover {
+  opacity: 0.85;
+  transform: none;
+  box-shadow: none;
 }
 
-.fc-theme-standard .fc-scrollgrid {
-  border-color: rgb(229 231 235);
+/* Colores pastel ultra suaves - Estilo Google Calendar */
+.calendar-google-style .fc-event-flete {
+  @apply bg-blue-100 text-blue-800;
+  border-left: 3px solid #2563eb;
+}
+
+.calendar-google-style .fc-event-mudanza {
+  @apply bg-purple-100 text-purple-800;
+  border-left: 3px solid #9333ea;
+}
+
+.calendar-google-style .fc-event-escombros {
+  @apply bg-emerald-100 text-emerald-800;
+  border-left: 3px solid #059669;
+}
+
+/* Contenido del evento */
+.calendar-google-style .fc-event-content-wrapper {
+  @apply flex items-start gap-1;
+}
+
+.calendar-google-style .fc-event-time {
+  @apply text-[10px] font-medium opacity-90 shrink-0;
+}
+
+.calendar-google-style .fc-event-title-wrapper {
+  @apply flex-1 min-w-0;
+}
+
+.calendar-google-style .fc-event-title {
+  @apply text-[11px] font-normal truncate leading-tight;
+}
+
+/* Botón "more" cuando hay muchos eventos */
+.calendar-google-style .fc-daygrid-more-link {
+  @apply text-xs text-gray-600 hover:text-gray-900 font-normal px-2;
+}
+
+/* ===== RESPONSIVE MOBILE ===== */
+@media (max-width: 768px) {
+  /* Hacer el calendario más compacto en móvil */
+  .calendar-google-style .fc-toolbar {
+    @apply px-2 pt-2 mb-2 flex-col gap-2;
+  }
+
+  .calendar-google-style .fc-toolbar-chunk {
+    @apply flex justify-center;
+  }
+
+  .calendar-google-style .fc-toolbar-title {
+    @apply text-lg;
+  }
+
+  .calendar-google-style .fc-daygrid-day-frame {
+    @apply min-h-[80px];
+  }
+
+  .calendar-google-style .fc-daygrid-day-number {
+    @apply text-[11px] w-5 h-5;
+  }
+
+  .calendar-google-style .fc-event {
+    padding: 1px 3px;
+    margin: 0.5px 1px;
+  }
+
+  .calendar-google-style .fc-event-time {
+    @apply text-[9px];
+  }
+
+  .calendar-google-style .fc-event-title {
+    @apply text-[10px];
+  }
+
+  /* Ocultar vista semanal en móvil */
+  .calendar-google-style .fc-timeGridWeek-button {
+    @apply hidden;
+  }
 }
 
 /* Animaciones adicionales */
