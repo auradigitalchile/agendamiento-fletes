@@ -12,7 +12,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "@/components/ui/dialog"
+} from "@/components/ui/sheet"
 
 const routes = [
   {
