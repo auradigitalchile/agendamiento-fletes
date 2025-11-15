@@ -76,8 +76,17 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const validatedData = clientSchema.parse(body)
 
+    // TODO: Agregar verificación de autenticación en Fase 3
+    // const session = await getServerSession()
+    // const organizationId = session.user.organizationId
+
+    // Por ahora, usamos un organizationId temporal
+    // Esto se reemplazará con el organizationId real de la sesión
+    const organizationId = "temp-org-id"
+
     const client = await prisma.client.create({
       data: {
+        organizationId,
         ...validatedData,
         email: validatedData.email || null,
       },
