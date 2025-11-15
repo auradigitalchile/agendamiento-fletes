@@ -140,14 +140,14 @@ export default function HomePage() {
       <div className="flex-1 space-y-4 p-4 sm:p-6">
         {/* Mobile title */}
         <div className="lg:hidden">
-          <h1 className="text-xl font-bold mb-1">Calendario</h1>
-          <p className="text-sm text-muted-foreground">Vista general de servicios agendados</p>
+          <h1 className="text-2xl font-semibold text-gray-900 tracking-tight">Calendario</h1>
+          <p className="text-sm text-gray-500 mt-0.5">Vista general de servicios agendados</p>
         </div>
 
         {/* Barra de acciones */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <Select value={typeFilter} onValueChange={setTypeFilter}>
-            <SelectTrigger className="w-full sm:w-[180px] h-10">
+            <SelectTrigger className="w-full sm:w-[180px] h-9 rounded-lg border-gray-300 bg-white">
               <SelectValue placeholder="Filtrar por tipo" />
             </SelectTrigger>
             <SelectContent>
@@ -157,7 +157,10 @@ export default function HomePage() {
               <SelectItem value="ESCOMBROS">Escombros</SelectItem>
             </SelectContent>
           </Select>
-          <Button onClick={handleNewService} className="w-full sm:w-auto h-10">
+          <Button
+            onClick={handleNewService}
+            className="w-full sm:w-auto h-9 px-4 rounded-lg bg-blue-600 hover:bg-blue-700 shadow-sm hidden md:flex"
+          >
             <Plus className="mr-2 h-4 w-4" />
             Nuevo Servicio
           </Button>

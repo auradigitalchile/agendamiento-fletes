@@ -47,38 +47,40 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <>
       {/* Logo */}
-      <div className="flex h-16 items-center border-b px-6">
-        <Link href="/" className="flex items-center gap-2" onClick={onNavigate}>
-          <Truck className="h-8 w-8 text-primary" />
-          <span className="text-xl font-bold">Flete MVP</span>
+      <div className="flex h-14 items-center border-b border-gray-200 px-4">
+        <Link href="/" className="flex items-center gap-2.5" onClick={onNavigate}>
+          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center shadow-sm">
+            <Truck className="h-4 w-4 text-white" />
+          </div>
+          <span className="text-lg font-semibold text-gray-900 tracking-tight">Flete</span>
         </Link>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-1 p-4">
+      <nav className="flex-1 space-y-0.5 p-3 pt-4">
         {routes.map((route) => (
           <Link
             key={route.href}
             href={route.href}
             onClick={onNavigate}
             className={cn(
-              "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+              "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all",
               pathname === route.href
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                ? "bg-blue-50 text-blue-700 shadow-sm"
+                : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
             )}
           >
-            <route.icon className={cn("h-5 w-5", pathname === route.href ? "" : route.color)} />
+            <route.icon className="h-4 w-4" />
             {route.label}
           </Link>
         ))}
       </nav>
 
       {/* Footer */}
-      <div className="border-t p-4">
-        <div className="text-xs text-muted-foreground">
-          <p>Flete MVP v1.0</p>
-          <p>Sistema de gestión de fletes</p>
+      <div className="border-t border-gray-200 p-4">
+        <div className="text-xs text-gray-500 space-y-0.5">
+          <p className="font-medium text-gray-700">Flete MVP</p>
+          <p>Versión 1.0.0</p>
         </div>
       </div>
     </>
@@ -88,7 +90,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 // Sidebar for desktop
 export function Sidebar() {
   return (
-    <div className="hidden lg:flex h-full flex-col bg-card border-r">
+    <div className="hidden lg:flex h-full flex-col bg-white border-r border-gray-200">
       <SidebarContent />
     </div>
   )

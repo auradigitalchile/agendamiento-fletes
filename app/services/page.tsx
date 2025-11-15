@@ -105,21 +105,21 @@ export default function ServicesPage() {
 
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
-      PENDIENTE: "bg-orange-500 text-white hover:bg-orange-600",
-      CONFIRMADO: "bg-blue-500 text-white hover:bg-blue-600",
-      FINALIZADO: "bg-green-500 text-white hover:bg-green-600",
-      CANCELADO: "bg-red-500 text-white hover:bg-red-600",
+      PENDIENTE: "bg-orange-50 text-orange-700 border-orange-200 hover:bg-orange-100",
+      CONFIRMADO: "bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100",
+      FINALIZADO: "bg-green-50 text-green-700 border-green-200 hover:bg-green-100",
+      CANCELADO: "bg-red-50 text-red-700 border-red-200 hover:bg-red-100",
     }
-    return colors[status] || "bg-gray-500 text-white"
+    return colors[status] || "bg-gray-50 text-gray-700 border-gray-200"
   }
 
   const getTypeColor = (type: string) => {
     const colors: Record<string, string> = {
-      FLETE: "bg-blue-500 text-white hover:bg-blue-600",
-      MUDANZA: "bg-purple-500 text-white hover:bg-purple-600",
-      ESCOMBROS: "bg-green-600 text-white hover:bg-green-700",
+      FLETE: "bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100",
+      MUDANZA: "bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100",
+      ESCOMBROS: "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100",
     }
-    return colors[type] || "bg-gray-500 text-white"
+    return colors[type] || "bg-gray-50 text-gray-700 border-gray-200"
   }
 
   return (
@@ -127,105 +127,185 @@ export default function ServicesPage() {
       <div className="flex-1 space-y-4 sm:space-y-6 p-4 sm:p-6 lg:p-8">
         {/* Header con título y botones */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">Servicios</h1>
-          <div className="flex gap-2 sm:gap-3">
+          <div>
+            <h1 className="text-2xl font-semibold text-gray-900 tracking-tight">Servicios</h1>
+            <p className="text-sm text-gray-500 mt-0.5">
+              Gestiona tus servicios de flete, mudanza y escombros
+            </p>
+          </div>
+          <div className="flex gap-2">
             <Button
               variant="outline"
               onClick={handleExport}
-              className="gap-2 text-sm sm:text-base h-10 sm:h-10"
+              className="gap-2 text-sm h-9 px-3 rounded-lg border-gray-300 hover:bg-gray-50 hidden sm:flex"
             >
               <FileDown className="h-4 w-4" />
-              <span className="hidden sm:inline">Exportar CSV</span>
-              <span className="sm:hidden">Exportar</span>
+              Exportar
             </Button>
             <Button
               onClick={handleNewService}
-              className="gap-2 text-sm sm:text-base h-10 sm:h-10"
+              className="gap-2 text-sm h-9 px-4 rounded-lg bg-blue-600 hover:bg-blue-700 shadow-sm hidden md:flex"
             >
               <Plus className="h-4 w-4" />
-              <span className="hidden sm:inline">Nuevo Servicio</span>
-              <span className="sm:hidden">Nuevo</span>
+              Nuevo Servicio
             </Button>
           </div>
         </div>
 
-        {/* Tabla de servicios */}
+        {/* Tabla de servicios - Desktop */}
         {isLoading ? (
-          <div className="text-center py-12 text-muted-foreground">
+          <div className="text-center py-12 text-muted-foreground text-sm">
             Cargando servicios...
           </div>
         ) : services && services.length > 0 ? (
-          <div className="bg-card rounded-lg border overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b bg-muted/50">
-                    <th className="text-left p-3 sm:p-4 font-medium text-muted-foreground text-sm whitespace-nowrap">
-                      Fecha
-                    </th>
-                    <th className="text-left p-3 sm:p-4 font-medium text-muted-foreground text-sm whitespace-nowrap">
-                      Cliente
-                    </th>
-                    <th className="text-left p-3 sm:p-4 font-medium text-muted-foreground text-sm whitespace-nowrap">
-                      Tipo
-                    </th>
-                    <th className="text-left p-3 sm:p-4 font-medium text-muted-foreground text-sm whitespace-nowrap">
-                      Precio
-                    </th>
-                    <th className="text-left p-3 sm:p-4 font-medium text-muted-foreground text-sm whitespace-nowrap">
-                      Estado
-                    </th>
-                    <th className="text-left p-3 sm:p-4 font-medium text-muted-foreground text-sm whitespace-nowrap">
-                      Acciones
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {services.map((service) => (
-                    <tr key={service.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
-                      <td className="p-3 sm:p-4 text-muted-foreground text-sm whitespace-nowrap">
-                        {format(new Date(service.scheduledDate), "dd/MM/yyyy HH:mm")}
-                      </td>
-                      <td className="p-3 sm:p-4 font-medium text-sm">
-                        {service.clientName}
-                      </td>
-                      <td className="p-3 sm:p-4">
-                        <Badge className={getTypeColor(service.type)}>
-                          {getServiceTypeLabel(service.type)}
-                        </Badge>
-                      </td>
-                      <td className="p-3 sm:p-4 font-semibold text-sm">
-                        {formatPrice(service.price)}
-                      </td>
-                      <td className="p-3 sm:p-4">
-                        <Badge className={getStatusColor(service.status)}>
-                          {getServiceStatusLabel(service.status)}
-                        </Badge>
-                      </td>
-                      <td className="p-3 sm:p-4">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleEdit(service)}
-                          className="h-10 w-10 sm:h-8 sm:w-8"
-                        >
-                          <Pencil className="h-5 w-5 sm:h-4 sm:w-4" />
-                        </Button>
-                      </td>
+          <>
+            {/* Vista Desktop - Tabla compacta */}
+            <div className="hidden md:block bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-gray-100 bg-gray-50/50">
+                      <th className="text-left px-4 py-2.5 font-medium text-gray-600 text-xs uppercase tracking-wide">
+                        Fecha
+                      </th>
+                      <th className="text-left px-4 py-2.5 font-medium text-gray-600 text-xs uppercase tracking-wide">
+                        Cliente
+                      </th>
+                      <th className="text-left px-4 py-2.5 font-medium text-gray-600 text-xs uppercase tracking-wide">
+                        Tipo
+                      </th>
+                      <th className="text-left px-4 py-2.5 font-medium text-gray-600 text-xs uppercase tracking-wide">
+                        Precio
+                      </th>
+                      <th className="text-left px-4 py-2.5 font-medium text-gray-600 text-xs uppercase tracking-wide">
+                        Estado
+                      </th>
+                      <th className="text-right px-4 py-2.5 font-medium text-gray-600 text-xs uppercase tracking-wide">
+
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {services.map((service) => (
+                      <tr
+                        key={service.id}
+                        className="group hover:bg-gray-50/50 transition-colors"
+                      >
+                        <td className="px-4 py-2.5">
+                          <div className="flex flex-col">
+                            <span className="text-sm font-medium text-gray-900">
+                              {format(new Date(service.scheduledDate), "dd/MM/yyyy")}
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              {format(new Date(service.scheduledDate), "HH:mm")}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-2.5">
+                          <span className="text-sm font-medium text-gray-900">
+                            {service.clientName}
+                          </span>
+                        </td>
+                        <td className="px-4 py-2.5">
+                          <Badge
+                            variant="outline"
+                            className={`text-xs font-medium px-2 py-0.5 rounded-full border ${getTypeColor(service.type)}`}
+                          >
+                            {getServiceTypeLabel(service.type)}
+                          </Badge>
+                        </td>
+                        <td className="px-4 py-2.5">
+                          <span className="text-sm font-semibold text-gray-900">
+                            {formatPrice(service.price)}
+                          </span>
+                        </td>
+                        <td className="px-4 py-2.5">
+                          <Badge
+                            variant="outline"
+                            className={`text-xs font-medium px-2 py-0.5 rounded-full border ${getStatusColor(service.status)}`}
+                          >
+                            {getServiceStatusLabel(service.status)}
+                          </Badge>
+                        </td>
+                        <td className="px-4 py-2.5 text-right">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEdit(service)}
+                            className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
+
+            {/* Vista Mobile - Cards */}
+            <div className="md:hidden space-y-3">
+              {services.map((service) => (
+                <div
+                  key={service.id}
+                  className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 hover:shadow-md transition-all"
+                  onClick={() => handleEdit(service)}
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-xs font-medium text-gray-500">
+                          {format(new Date(service.scheduledDate), "dd/MM/yyyy")}
+                        </span>
+                        <span className="text-xs text-gray-400">•</span>
+                        <span className="text-xs font-medium text-gray-500">
+                          {format(new Date(service.scheduledDate), "HH:mm")}
+                        </span>
+                      </div>
+                      <h3 className="text-base font-semibold text-gray-900">
+                        {service.clientName}
+                      </h3>
+                    </div>
+                    <span className="text-base font-bold text-gray-900">
+                      {formatPrice(service.price)}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Badge
+                      variant="outline"
+                      className={`text-xs font-medium px-2.5 py-0.5 rounded-full border ${getTypeColor(service.type)}`}
+                    >
+                      {getServiceTypeLabel(service.type)}
+                    </Badge>
+                    <Badge
+                      variant="outline"
+                      className={`text-xs font-medium px-2.5 py-0.5 rounded-full border ${getStatusColor(service.status)}`}
+                    >
+                      {getServiceStatusLabel(service.status)}
+                    </Badge>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         ) : (
-          <div className="bg-card rounded-lg border p-12 text-center">
-            <p className="text-muted-foreground">
+          <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
+            <p className="text-sm text-gray-500">
               No hay servicios registrados
             </p>
           </div>
         )}
       </div>
+
+      {/* Botón flotante para móvil */}
+      <button
+        onClick={handleNewService}
+        className="md:hidden fixed bottom-6 right-6 h-14 w-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center z-50"
+      >
+        <Plus className="h-6 w-6" />
+      </button>
 
       {/* Formulario de servicio */}
       <ServiceForm

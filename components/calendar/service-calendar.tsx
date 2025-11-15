@@ -36,7 +36,7 @@ export function ServiceCalendar({
   }))
 
   return (
-    <div className="bg-card rounded-lg border p-4">
+    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden p-3 sm:p-4">
       <FullCalendar
         ref={calendarRef}
         plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
@@ -56,13 +56,13 @@ export function ServiceCalendar({
         eventContent={(eventInfo) => {
           const service = eventInfo.event.extendedProps.service as Service
           return (
-            <div className="fc-event-main-frame p-1">
+            <div className="fc-event-main-frame p-1 cursor-pointer">
               <div className="fc-event-title-container">
-                <div className="fc-event-title fc-sticky text-xs font-medium">
+                <div className="fc-event-title fc-sticky text-xs font-medium truncate">
                   {service.clientName}
                 </div>
               </div>
-              <div className="text-xs opacity-90">
+              <div className="text-xs opacity-90 truncate">
                 {formatPrice(service.price)}
               </div>
             </div>
