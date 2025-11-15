@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { startOfDay, endOfDay, subWeeks, format } from "date-fns"
 
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic'
+
 // GET /api/cash/stats - Obtener estadísticas de caja
 export async function GET(request: NextRequest) {
   try {

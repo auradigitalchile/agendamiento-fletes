@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
 import { z } from "zod"
 
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic'
+
 // Schema de validación para cliente
 const clientSchema = z.object({
   name: z.string().min(1, "El nombre es requerido"),
