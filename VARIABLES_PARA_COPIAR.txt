@@ -1,0 +1,52 @@
+====================================
+VARIABLES DE ENTORNO PARA VERCEL
+====================================
+
+Copia y pega EXACTAMENTE estos valores en Vercel → Settings → Environment Variables
+
+------------------------------------
+VARIABLE #1
+------------------------------------
+Key:
+DATABASE_URL
+
+Value:
+postgresql://neondb_owner:npg_RHeg1P7IxDfS@ep-floral-dust-ahjwefzt-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require
+
+Environments: Production, Preview, Development
+
+
+------------------------------------
+VARIABLE #2
+------------------------------------
+Key:
+NEXT_PUBLIC_APP_URL
+
+Value:
+https://agendamiento-flete-alpha.vercel.app
+
+Environments: Production, Preview, Development
+
+
+------------------------------------
+VARIABLE #3
+------------------------------------
+Key:
+NODE_ENV
+
+Value:
+production
+
+Environments: Production solamente
+
+
+====================================
+CHECKLIST
+====================================
+[ ] Agregué DATABASE_URL
+[ ] Agregué NEXT_PUBLIC_APP_URL
+[ ] Agregué NODE_ENV
+[ ] Hice Redeploy sin cache
+[ ] Esperé a que termine el build (2-3 min)
+[ ] Abrí https://agendamiento-flete-alpha.vercel.app/
+[ ] Veo el calendario funcionando

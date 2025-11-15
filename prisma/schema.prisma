@@ -1,0 +1,117 @@
+// Prisma Schema para Flete MVP
+// Base de datos: PostgreSQL
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ========================================
+// MODELOS
+// ========================================
+
+// Usuario del sistema (equipo interno)
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+// Cliente que contrata servicios
+model Client {
+  id             String    @id @default(cuid())
+  name           String
+  phone          String
+  email          String?
+  defaultAddress String?
+  notes          String?   @db.Text
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  // Relaciones
+  services Service[]
+
+  @@index([email])
+  @@map("clients")
+}
+
+// Servicio agendado (flete, mudanza, retiro de escombros)
+model Service {
+  id               String           @id @default(cuid())
+  type             ServiceType
+  status           ServiceStatus    @default(PENDIENTE)
+  scheduledDate    DateTime
+  price            Float
+
+  // Datos del cliente (inline, sin necesidad de crear cliente)
+  clientName       String
+  clientPhone      String
+  clientAddress    String?
+
+  // Campos para FLETE y MUDANZA
+  origin           String?
+  destination      String?
+  cargoDescription String?          @db.Text
+  requiresHelper   Boolean          @default(false)
+
+  // Campos específicos para ESCOMBROS
+  debrisType       DebrisType?
+  debrisQuantity   DebrisQuantity?
+
+  // Notas generales
+  notes            String?          @db.Text
+
+  // Relación opcional con Cliente (para clientes recurrentes)
+  clientId         String?
+  client           Client?          @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  // Timestamps
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  @@index([clientId])
+  @@index([scheduledDate])
+  @@index([status])
+  @@index([type])
+  @@index([clientPhone])
+  @@map("services")
+}
+
+// ========================================
+// ENUMS
+// ========================================
+
+enum ServiceType {
+  FLETE
+  MUDANZA
+  ESCOMBROS
+}
+
+enum ServiceStatus {
+  PENDIENTE
+  CONFIRMADO
+  FINALIZADO
+  CANCELADO
+}
+
+enum DebrisType {
+  OBRA
+  TIERRA
+  MADERA
+  ARIDOS
+  MIXTO
+}
+
+enum DebrisQuantity {
+  PEQUENO
+  MEDIO_CAMION
+  LLENO
+}

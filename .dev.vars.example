@@ -1,0 +1,5 @@
+# Cloudflare Pages Environment Variables
+DATABASE_URL="postgresql://neondb_owner:npg_RHeg1P7IxDfS@ep-floral-dust-ahjwefzt-pooler.us-east-1.aws.neon.tech/neondb?sslmode=require"
+NEXT_PUBLIC_APP_URL="https://flete-mvp.pages.dev"
+NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=""
+NODE_ENV="production"

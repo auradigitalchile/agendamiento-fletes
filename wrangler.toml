@@ -1,0 +1,10 @@
+name = "flete-mvp"
+compatibility_date = "2025-11-14"
+pages_build_output_dir = ".vercel/output/static"
+
+[env.production]
+vars = { NODE_ENV = "production" }
+
+# Cloudflare Pages Configuration
+# This project uses Next.js
+# Deploy via Cloudflare Pages Dashboard for best compatibility
