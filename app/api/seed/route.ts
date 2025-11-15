@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { CashMovementType, PaymentMethod } from "@prisma/client"
+import { CashMovementType, PaymentMethod, Prisma } from "@prisma/client"
 
 // GET /api/seed - Crear datos de ejemplo para Caja
 export async function GET() {
@@ -21,7 +21,7 @@ export async function GET() {
     const now = new Date()
 
     // Crear movimientos de ejemplo de los últimos 30 días
-    const movements = []
+    const movements: Prisma.CashMovementCreateManyInput[] = []
 
     // Semana 1 (hace 21-28 días)
     for (let i = 28; i >= 22; i--) {
