@@ -115,25 +115,35 @@ export default function ClientsPage() {
 
   return (
     <div className="flex h-full flex-col">
-      <Header
-        title="Clientes"
-        description="Administra los clientes de tu negocio"
-      />
+      {/* Desktop header */}
+      <div className="hidden lg:block">
+        <Header
+          title="Clientes"
+          description="Administra los clientes de tu negocio"
+        />
+      </div>
 
-      <div className="flex-1 space-y-4 p-6">
-        <div className="flex items-center justify-between gap-4">
-          <div className="relative flex-1 max-w-sm">
+      <div className="flex-1 space-y-4 p-4 sm:p-6">
+        {/* Mobile title */}
+        <div className="lg:hidden">
+          <h1 className="text-xl font-bold mb-1">Clientes</h1>
+          <p className="text-sm text-muted-foreground">Administra los clientes de tu negocio</p>
+        </div>
+
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="relative flex-1 sm:max-w-sm">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Buscar clientes..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-10"
+              className="pl-10 h-10"
             />
           </div>
-          <Button onClick={handleNewClient}>
+          <Button onClick={handleNewClient} className="w-full sm:w-auto h-10">
             <Plus className="mr-2 h-4 w-4" />
-            Nuevo Cliente
+            <span className="hidden sm:inline">Nuevo Cliente</span>
+            <span className="sm:hidden">Nuevo</span>
           </Button>
         </div>
 

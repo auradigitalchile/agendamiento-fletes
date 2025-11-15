@@ -129,28 +129,35 @@ export default function HomePage() {
 
   return (
     <div className="flex h-full flex-col">
-      <Header
-        title="Calendario"
-        description="Vista general de servicios agendados"
-      />
+      {/* Desktop header */}
+      <div className="hidden lg:block">
+        <Header
+          title="Calendario"
+          description="Vista general de servicios agendados"
+        />
+      </div>
 
-      <div className="flex-1 space-y-4 p-6">
+      <div className="flex-1 space-y-4 p-4 sm:p-6">
+        {/* Mobile title */}
+        <div className="lg:hidden">
+          <h1 className="text-xl font-bold mb-1">Calendario</h1>
+          <p className="text-sm text-muted-foreground">Vista general de servicios agendados</p>
+        </div>
+
         {/* Barra de acciones */}
-        <div className="flex items-center justify-between">
-          <div className="flex gap-2">
-            <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="w-[160px]">
-                <SelectValue placeholder="Filtrar por tipo" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos los tipos</SelectItem>
-                <SelectItem value="FLETE">Flete</SelectItem>
-                <SelectItem value="MUDANZA">Mudanza</SelectItem>
-                <SelectItem value="ESCOMBROS">Escombros</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <Button onClick={handleNewService}>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <Select value={typeFilter} onValueChange={setTypeFilter}>
+            <SelectTrigger className="w-full sm:w-[180px] h-10">
+              <SelectValue placeholder="Filtrar por tipo" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos los tipos</SelectItem>
+              <SelectItem value="FLETE">Flete</SelectItem>
+              <SelectItem value="MUDANZA">Mudanza</SelectItem>
+              <SelectItem value="ESCOMBROS">Escombros</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button onClick={handleNewService} className="w-full sm:w-auto h-10">
             <Plus className="mr-2 h-4 w-4" />
             Nuevo Servicio
           </Button>

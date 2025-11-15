@@ -124,19 +124,27 @@ export default function ServicesPage() {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex-1 space-y-6 p-8">
+      <div className="flex-1 space-y-4 sm:space-y-6 p-4 sm:p-6 lg:p-8">
         {/* Header con título y botones */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <h1 className="text-2xl sm:text-3xl font-bold">Servicios</h1>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">Servicios</h1>
           <div className="flex gap-2 sm:gap-3">
-            <Button variant="outline" onClick={handleExport} className="gap-2 text-sm sm:text-base">
+            <Button
+              variant="outline"
+              onClick={handleExport}
+              className="gap-2 text-sm sm:text-base h-10 sm:h-10"
+            >
               <FileDown className="h-4 w-4" />
               <span className="hidden sm:inline">Exportar CSV</span>
               <span className="sm:hidden">Exportar</span>
             </Button>
-            <Button onClick={handleNewService} className="gap-2 text-sm sm:text-base">
+            <Button
+              onClick={handleNewService}
+              className="gap-2 text-sm sm:text-base h-10 sm:h-10"
+            >
               <Plus className="h-4 w-4" />
-              Nuevo Servicio
+              <span className="hidden sm:inline">Nuevo Servicio</span>
+              <span className="sm:hidden">Nuevo</span>
             </Button>
           </div>
         </div>
@@ -199,9 +207,9 @@ export default function ServicesPage() {
                           variant="ghost"
                           size="icon"
                           onClick={() => handleEdit(service)}
-                          className="h-8 w-8"
+                          className="h-10 w-10 sm:h-8 sm:w-8"
                         >
-                          <Pencil className="h-4 w-4" />
+                          <Pencil className="h-5 w-5 sm:h-4 sm:w-4" />
                         </Button>
                       </td>
                     </tr>
