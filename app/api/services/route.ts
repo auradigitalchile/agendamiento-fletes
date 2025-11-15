@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
       data: {
         ...validatedData,
         scheduledDate: new Date(validatedData.scheduledDate),
-      } as Prisma.ServiceCreateInput,
+      } as any,
       include: {
         client: true,
       },
