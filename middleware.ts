@@ -11,12 +11,14 @@ export default auth((req) => {
 
   // Si no está logueado y no está en ruta pública, redirigir a login
   if (!isLoggedIn && !isPublicRoute) {
-    return NextResponse.redirect(new URL("/login", req.url))
+    const loginUrl = new URL("/login", req.nextUrl.origin)
+    return NextResponse.redirect(loginUrl)
   }
 
   // Si está logueado y está en login/register, redirigir a home
   if (isLoggedIn && isPublicRoute) {
-    return NextResponse.redirect(new URL("/", req.url))
+    const homeUrl = new URL("/", req.nextUrl.origin)
+    return NextResponse.redirect(homeUrl)
   }
 
   return NextResponse.next()
