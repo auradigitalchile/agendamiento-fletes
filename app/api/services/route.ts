@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
+import { Prisma } from "@prisma/client"
 import { z } from "zod"
 
 // Force dynamic rendering for this route
@@ -99,7 +100,7 @@ export async function POST(request: NextRequest) {
       data: {
         ...validatedData,
         scheduledDate: new Date(validatedData.scheduledDate),
-      },
+      } as Prisma.ServiceCreateInput,
       include: {
         client: true,
       },
