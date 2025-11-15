@@ -4,6 +4,7 @@ import { startOfDay, endOfDay } from "date-fns"
 
 // Force dynamic rendering for this route
 export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 // GET /api/cash/close - Obtener cierres diarios
 export async function GET(request: NextRequest) {

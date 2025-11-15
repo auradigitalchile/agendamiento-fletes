@@ -4,6 +4,7 @@ import { format } from "date-fns"
 
 // Force dynamic rendering for this route
 export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 /**
  * GET /api/export?month=2025-01

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma"
 
 // Force dynamic rendering for this route
 export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 // GET /api/cash/movements - Obtener movimientos
 export async function GET(request: NextRequest) {

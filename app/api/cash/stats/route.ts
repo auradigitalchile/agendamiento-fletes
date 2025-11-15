@@ -4,6 +4,7 @@ import { startOfDay, endOfDay, subWeeks, format } from "date-fns"
 
 // Force dynamic rendering for this route
 export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 // GET /api/cash/stats - Obtener estadísticas de caja
 export async function GET(request: NextRequest) {
