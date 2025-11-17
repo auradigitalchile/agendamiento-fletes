@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
 import { z } from "zod"
+import { getOrganizationId } from "@/lib/session"
 
 // Force dynamic rendering for this route
 export const dynamic = 'force-dynamic'
@@ -21,19 +22,21 @@ const clientSchema = z.object({
  */
 export async function GET(request: NextRequest) {
   try {
+    const organizationId = await getOrganizationId()
     const { searchParams } = new URL(request.url)
     const search = searchParams.get("search")
 
     const clients = await prisma.client.findMany({
-      where: search
-        ? {
-            OR: [
-              { name: { contains: search, mode: "insensitive" } },
-              { phone: { contains: search } },
-              { email: { contains: search, mode: "insensitive" } },
-            ],
-          }
-        : undefined,
+      where: {
+        organizationId,
+        ...(search && {
+          OR: [
+            { name: { contains: search, mode: "insensitive" } },
+            { phone: { contains: search } },
+            { email: { contains: search, mode: "insensitive" } },
+          ],
+        }),
+      },
       include: {
         services: {
           select: {
@@ -73,6 +76,7 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
+    const organizationId = await getOrganizationId()
     const body = await request.json()
     const validatedData = clientSchema.parse(body)
 
@@ -88,6 +92,7 @@ export async function POST(request: NextRequest) {
       data: {
         organizationId,
         ...validatedData,
+        organizationId,
         email: validatedData.email || null,
       },
     })

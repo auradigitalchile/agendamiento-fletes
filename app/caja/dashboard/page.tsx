@@ -60,7 +60,7 @@ export default function DashboardPage() {
   const distribucionData = [
     { name: "Efectivo", value: stats.efectivo },
     { name: "Transfer. Andrés", value: stats.transferenciasAndres },
-    { name: "Transfer. Hermano", value: stats.transferenciasHermano },
+    { name: "Transfer. Leonardo", value: stats.transferenciasHermano },
   ].filter((item) => item.value > 0)
 
   return (
@@ -194,7 +194,7 @@ export default function DashboardPage() {
                   cy="50%"
                   labelLine={false}
                   label={({ name, percent }) =>
-                    `${name}: ${((percent ?? 0) * 100).toFixed(0)}%`
+                    `${name}: ${((percent || 0) * 100).toFixed(0)}%`
                   }
                   outerRadius={80}
                   fill="#8884d8"

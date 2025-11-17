@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
 import { Prisma } from "@prisma/client"
 import { z } from "zod"
+import { getOrganizationId } from "@/lib/session"
 
 // Force dynamic rendering for this route
 export const dynamic = 'force-dynamic'
@@ -42,6 +43,7 @@ const serviceSchema = z.object({
  */
 export async function GET(request: NextRequest) {
   try {
+    const organizationId = await getOrganizationId()
     const { searchParams } = new URL(request.url)
     const type = searchParams.get("type")
     const status = searchParams.get("status")
@@ -51,6 +53,7 @@ export async function GET(request: NextRequest) {
 
     const services = await prisma.service.findMany({
       where: {
+        organizationId,
         ...(type && { type: type as any }),
         ...(status && { status: status as any }),
         ...(clientId && { clientId }),
@@ -93,12 +96,14 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
+    const organizationId = await getOrganizationId()
     const body = await request.json()
     const validatedData = serviceSchema.parse(body)
 
     const service = await prisma.service.create({
       data: {
         ...validatedData,
+        organizationId,
         scheduledDate: new Date(validatedData.scheduledDate),
       } as any,
       include: {

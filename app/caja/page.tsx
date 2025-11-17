@@ -334,7 +334,7 @@ export default function CajaPage() {
                       Transfer. Andrés
                     </SelectItem>
                     <SelectItem value="TRANSFERENCIA_HERMANO">
-                      Transfer. Hermano
+                      Transfer. Leonardo
                     </SelectItem>
                   </SelectContent>
                 </Select>

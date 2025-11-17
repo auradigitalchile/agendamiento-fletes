@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Plus } from "lucide-react"
+import { MainLayout } from "@/components/layout/main-layout"
 import { Header } from "@/components/layout/header"
 import { Button } from "@/components/ui/button"
 import {
@@ -128,70 +129,72 @@ export default function HomePage() {
   }
 
   return (
-    <div className="flex h-full flex-col">
-      {/* Desktop header */}
-      <div className="hidden lg:block">
-        <Header
-          title="Calendario"
-          description="Vista general de servicios agendados"
+    <MainLayout>
+      <div className="flex h-full flex-col">
+        {/* Desktop header */}
+        <div className="hidden lg:block">
+          <Header
+            title="Calendario"
+            description="Vista general de servicios agendados"
+          />
+        </div>
+
+        <div className="flex-1 space-y-4 p-4 sm:p-6">
+          {/* Mobile title */}
+          <div className="lg:hidden">
+            <h1 className="text-2xl font-semibold text-gray-900 tracking-tight">Calendario</h1>
+            <p className="text-sm text-gray-500 mt-0.5">Vista general de servicios agendados</p>
+          </div>
+
+          {/* Barra de acciones */}
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <Select value={typeFilter} onValueChange={setTypeFilter}>
+              <SelectTrigger className="w-full sm:w-[180px] h-9 rounded-lg border-gray-300 bg-white">
+                <SelectValue placeholder="Filtrar por tipo" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos los tipos</SelectItem>
+                <SelectItem value="FLETE">Flete</SelectItem>
+                <SelectItem value="MUDANZA">Mudanza</SelectItem>
+                <SelectItem value="ESCOMBROS">Escombros</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button
+              onClick={handleNewService}
+              className="w-full sm:w-auto h-9 px-4 rounded-lg bg-blue-600 hover:bg-blue-700 shadow-sm hidden md:flex"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Nuevo Servicio
+            </Button>
+          </div>
+
+          {/* Calendario */}
+          {isLoading ? (
+            <div className="text-center py-12 text-muted-foreground">
+              Cargando calendario...
+            </div>
+          ) : services ? (
+            <ServiceCalendar
+              services={services}
+              onDateClick={handleDateClick}
+              onEventClick={handleEventClick}
+            />
+          ) : (
+            <div className="text-center py-12 text-muted-foreground">
+              No hay servicios registrados
+            </div>
+          )}
+        </div>
+
+        {/* Formulario de servicio */}
+        <ServiceForm
+          service={selectedService}
+          initialDate={selectedDate}
+          open={isFormOpen}
+          onOpenChange={setIsFormOpen}
+          onSubmit={handleSubmit}
         />
       </div>
-
-      <div className="flex-1 space-y-4 p-4 sm:p-6">
-        {/* Mobile title */}
-        <div className="lg:hidden">
-          <h1 className="text-2xl font-semibold text-gray-900 tracking-tight">Calendario</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Vista general de servicios agendados</p>
-        </div>
-
-        {/* Barra de acciones */}
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <Select value={typeFilter} onValueChange={setTypeFilter}>
-            <SelectTrigger className="w-full sm:w-[180px] h-9 rounded-lg border-gray-300 bg-white">
-              <SelectValue placeholder="Filtrar por tipo" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos los tipos</SelectItem>
-              <SelectItem value="FLETE">Flete</SelectItem>
-              <SelectItem value="MUDANZA">Mudanza</SelectItem>
-              <SelectItem value="ESCOMBROS">Escombros</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button
-            onClick={handleNewService}
-            className="w-full sm:w-auto h-9 px-4 rounded-lg bg-blue-600 hover:bg-blue-700 shadow-sm hidden md:flex"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Nuevo Servicio
-          </Button>
-        </div>
-
-        {/* Calendario */}
-        {isLoading ? (
-          <div className="text-center py-12 text-muted-foreground">
-            Cargando calendario...
-          </div>
-        ) : services ? (
-          <ServiceCalendar
-            services={services}
-            onDateClick={handleDateClick}
-            onEventClick={handleEventClick}
-          />
-        ) : (
-          <div className="text-center py-12 text-muted-foreground">
-            No hay servicios registrados
-          </div>
-        )}
-      </div>
-
-      {/* Formulario de servicio */}
-      <ServiceForm
-        service={selectedService}
-        initialDate={selectedDate}
-        open={isFormOpen}
-        onOpenChange={setIsFormOpen}
-        onSubmit={handleSubmit}
-      />
-    </div>
+    </MainLayout>
   )
 }

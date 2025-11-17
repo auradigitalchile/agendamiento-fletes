@@ -26,7 +26,7 @@ export default function LoginPage() {
       if (result?.error) {
         setError("Credenciales inválidas")
       } else {
-        router.push("/")
+        router.push("/caja")
         router.refresh()
       }
     } catch (error) {
@@ -44,7 +44,7 @@ export default function LoginPage() {
             Iniciar Sesión
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Flete MVP - Sistema de Gestión
+            FletePRO - Sistema de Gestión
           </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
@@ -65,9 +65,17 @@ export default function LoginPage() {
               />
             </div>
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Contraseña
-              </label>
+              <div className="flex items-center justify-between">
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                  Contraseña
+                </label>
+                <a
+                  href="/forgot-password"
+                  className="text-xs text-blue-600 hover:text-blue-500"
+                >
+                  ¿Olvidaste tu contraseña?
+                </a>
+              </div>
               <input
                 id="password"
                 name="password"
@@ -96,12 +104,11 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <div className="mt-4 text-center text-sm text-gray-600">
-          <p>Usuario de prueba:</p>
-          <p className="font-mono text-xs mt-1">
-            Email: admin@test.com<br />
-            Password: admin123
-          </p>
+        <div className="mt-4 text-center text-sm">
+          <span className="text-gray-600">¿No tienes cuenta? </span>
+          <a href="/register" className="font-medium text-blue-600 hover:text-blue-500">
+            Regístrate aquí
+          </a>
         </div>
       </div>
     </div>

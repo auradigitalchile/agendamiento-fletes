@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
 import { z } from "zod"
+import { getOrganizationId } from "@/lib/session"
 
 const serviceSchema = z.object({
   // Datos del cliente (inline, requeridos)
@@ -36,8 +37,12 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const service = await prisma.service.findUnique({
-      where: { id: params.id },
+    const organizationId = await getOrganizationId()
+    const service = await prisma.service.findFirst({
+      where: {
+        id: params.id,
+        organizationId,
+      },
       include: {
         client: true,
       },
@@ -69,8 +74,21 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
+    const organizationId = await getOrganizationId()
     const body = await request.json()
     const validatedData = serviceSchema.parse(body)
+
+    // Verificar que el servicio pertenece a la organización del usuario
+    const existingService = await prisma.service.findFirst({
+      where: { id: params.id, organizationId },
+    })
+
+    if (!existingService) {
+      return NextResponse.json(
+        { error: "Servicio no encontrado" },
+        { status: 404 }
+      )
+    }
 
     const service = await prisma.service.update({
       where: { id: params.id },
@@ -109,6 +127,20 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
+    const organizationId = await getOrganizationId()
+
+    // Verificar que el servicio pertenece a la organización del usuario
+    const existingService = await prisma.service.findFirst({
+      where: { id: params.id, organizationId },
+    })
+
+    if (!existingService) {
+      return NextResponse.json(
+        { error: "Servicio no encontrado" },
+        { status: 404 }
+      )
+    }
+
     await prisma.service.delete({
       where: { id: params.id },
     })

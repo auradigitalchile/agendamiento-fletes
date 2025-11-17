@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { startOfDay, endOfDay } from "date-fns"
+import { getOrganizationId } from "@/lib/session"
 
 // Force dynamic rendering for this route
 export const dynamic = 'force-dynamic'
@@ -9,11 +10,12 @@ export const revalidate = 0
 // GET /api/cash/close - Obtener cierres diarios
 export async function GET(request: NextRequest) {
   try {
+    const organizationId = await getOrganizationId()
     const { searchParams } = new URL(request.url)
     const startDate = searchParams.get("startDate")
     const endDate = searchParams.get("endDate")
 
-    const where: any = {}
+    const where: any = { organizationId }
 
     if (startDate) {
       where.date = { ...where.date, gte: startOfDay(new Date(startDate)) }
@@ -41,10 +43,8 @@ export async function GET(request: NextRequest) {
 // POST /api/cash/close - Crear cierre diario
 export async function POST(request: NextRequest) {
   try {
+    const organizationId = await getOrganizationId()
     const body = await request.json()
-
-    // TODO: Agregar verificación de autenticación en Fase 3
-    const organizationId = "temp-org-id"
 
     // Verificar si ya existe un cierre para esta fecha
     const existingClose = await prisma.dailyClose.findFirst({

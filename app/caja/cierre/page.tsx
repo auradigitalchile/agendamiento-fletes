@@ -168,7 +168,7 @@ export default function CierreDiarioPage() {
 
                       <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                         <span className="text-sm font-medium text-gray-600">
-                          Transfer. Hermano
+                          Transfer. Leonardo
                         </span>
                         <span className="text-sm font-semibold text-gray-900">
                           {formatPrice(totales.transferHermano)}

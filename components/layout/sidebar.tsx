@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Calendar, Users, Truck, FileText, Menu, X, Wallet, DollarSign, BarChart3 } from "lucide-react"
+import { Calendar, Users, Truck, FileText, Menu, X, Wallet, DollarSign, BarChart3, Settings } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
@@ -13,6 +13,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
+import { UserMenu } from "./user-menu"
 
 const routes = [
   {
@@ -57,6 +58,12 @@ const routes = [
     href: "/reports",
     color: "text-orange-500",
   },
+  {
+    label: "Configuración",
+    icon: Settings,
+    href: "/settings",
+    color: "text-gray-500",
+  },
 ]
 
 function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
@@ -70,7 +77,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
           <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center shadow-sm">
             <Truck className="h-4 w-4 text-white" />
           </div>
-          <span className="text-lg font-semibold text-gray-900 tracking-tight">Flete</span>
+          <span className="text-lg font-semibold text-gray-900 tracking-tight">FletePRO</span>
         </Link>
       </div>
 
@@ -96,8 +103,9 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 
       {/* Footer */}
       <div className="border-t border-gray-200 p-4">
-        <div className="text-xs text-gray-500 space-y-0.5">
-          <p className="font-medium text-gray-700">Flete MVP</p>
+        <UserMenu />
+        <div className="text-xs text-gray-500 space-y-0.5 mt-3">
+          <p className="font-medium text-gray-700">FletePRO</p>
           <p>Versión 1.0.0</p>
         </div>
       </div>
@@ -138,7 +146,7 @@ export function MobileMenu() {
             <div className="flex items-center justify-between h-16 px-6 border-b">
               <Link href="/" className="flex items-center gap-2" onClick={() => setOpen(false)}>
                 <Truck className="h-8 w-8 text-primary" />
-                <span className="text-xl font-bold">Flete MVP</span>
+                <span className="text-xl font-bold">FletePRO</span>
               </Link>
               <Button
                 variant="ghost"

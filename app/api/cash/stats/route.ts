@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { startOfDay, endOfDay, subWeeks, format } from "date-fns"
+import { getOrganizationId } from "@/lib/session"
 
 // Force dynamic rendering for this route
 export const dynamic = 'force-dynamic'
@@ -9,6 +10,7 @@ export const revalidate = 0
 // GET /api/cash/stats - Obtener estadísticas de caja
 export async function GET(request: NextRequest) {
   try {
+    const organizationId = await getOrganizationId()
     const { searchParams } = new URL(request.url)
     const startDateParam = searchParams.get("startDate")
     const endDateParam = searchParams.get("endDate")
@@ -19,8 +21,8 @@ export async function GET(request: NextRequest) {
       ? new Date(startDateParam)
       : subWeeks(endDate, 4)
 
-    // TODO: Filtrar por organizationId cuando implementemos auth
     const where = {
+      organizationId,
       date: {
         gte: startOfDay(startDate),
         lte: endOfDay(endDate),

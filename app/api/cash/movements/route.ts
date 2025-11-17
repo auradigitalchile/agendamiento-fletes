@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { getOrganizationId } from "@/lib/session"
 
 // Force dynamic rendering for this route
 export const dynamic = 'force-dynamic'
@@ -8,17 +9,13 @@ export const revalidate = 0
 // GET /api/cash/movements - Obtener movimientos
 export async function GET(request: NextRequest) {
   try {
+    const organizationId = await getOrganizationId()
     const { searchParams } = new URL(request.url)
     const startDate = searchParams.get("startDate")
     const endDate = searchParams.get("endDate")
     const type = searchParams.get("type")
 
-    // TODO: Agregar verificación de autenticación en Fase 3
-    // const session = await getServerSession()
-    // const organizationId = session.user.organizationId
-
-    // Por ahora, obtenemos TODOS los movimientos (multi-tenant se implementará después)
-    const where: any = {}
+    const where: any = { organizationId }
 
     if (startDate) {
       where.date = { ...where.date, gte: new Date(startDate) }
@@ -50,15 +47,8 @@ export async function GET(request: NextRequest) {
 // POST /api/cash/movements - Crear movimiento
 export async function POST(request: NextRequest) {
   try {
+    const organizationId = await getOrganizationId()
     const body = await request.json()
-
-    // TODO: Agregar verificación de autenticación en Fase 3
-    // const session = await getServerSession()
-    // const organizationId = session.user.organizationId
-
-    // Por ahora, usamos un organizationId temporal
-    // Esto se reemplazará con el organizationId real de la sesión
-    const organizationId = "temp-org-id"
 
     const movement = await prisma.cashMovement.create({
       data: {

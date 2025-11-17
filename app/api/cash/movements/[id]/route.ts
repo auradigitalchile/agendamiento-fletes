@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { getOrganizationId } from "@/lib/session"
 
 // GET /api/cash/movements/[id] - Obtener un movimiento
 export async function GET(
@@ -7,8 +8,12 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const movement = await prisma.cashMovement.findUnique({
-      where: { id: params.id },
+    const organizationId = await getOrganizationId()
+    const movement = await prisma.cashMovement.findFirst({
+      where: {
+        id: params.id,
+        organizationId,
+      },
     })
 
     if (!movement) {
@@ -34,7 +39,20 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
+    const organizationId = await getOrganizationId()
     const body = await request.json()
+
+    // Verificar que el movimiento pertenece a la organización
+    const existingMovement = await prisma.cashMovement.findFirst({
+      where: { id: params.id, organizationId },
+    })
+
+    if (!existingMovement) {
+      return NextResponse.json(
+        { error: "Movimiento no encontrado" },
+        { status: 404 }
+      )
+    }
 
     const movement = await prisma.cashMovement.update({
       where: { id: params.id },
@@ -64,6 +82,20 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
+    const organizationId = await getOrganizationId()
+
+    // Verificar que el movimiento pertenece a la organización
+    const existingMovement = await prisma.cashMovement.findFirst({
+      where: { id: params.id, organizationId },
+    })
+
+    if (!existingMovement) {
+      return NextResponse.json(
+        { error: "Movimiento no encontrado" },
+        { status: 404 }
+      )
+    }
+
     await prisma.cashMovement.delete({
       where: { id: params.id },
     })

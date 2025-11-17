@@ -6,8 +6,10 @@ export default auth((req) => {
   const isLoggedIn = !!req.auth
 
   // Rutas públicas
-  const publicRoutes = ["/login", "/register"]
-  const isPublicRoute = publicRoutes.includes(pathname)
+  const publicRoutes = ["/login", "/register", "/forgot-password"]
+  const isPublicRoute = publicRoutes.includes(pathname) ||
+                         pathname.startsWith("/reset-password") ||
+                         pathname.startsWith("/verify-email")
 
   // Si no está logueado y no está en ruta pública, redirigir a login
   if (!isLoggedIn && !isPublicRoute) {
@@ -15,10 +17,9 @@ export default auth((req) => {
     return NextResponse.redirect(loginUrl)
   }
 
-  // Si está logueado y está en login/register, redirigir a home
+  // Si está logueado y está en login/register, redirigir a caja
   if (isLoggedIn && isPublicRoute) {
-    const homeUrl = new URL("/", req.nextUrl.origin)
-    return NextResponse.redirect(homeUrl)
+    return NextResponse.redirect(new URL("/caja", req.url))
   }
 
   return NextResponse.next()
