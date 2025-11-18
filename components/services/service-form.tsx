@@ -138,7 +138,7 @@ export function ServiceForm({
       clientAddress: data.clientAddress,
       type: data.type,
       status: data.status,
-      scheduledDate: data.scheduledDate,
+      scheduledDate: new Date(data.scheduledDate).toISOString(),
       price: data.price,
       notes: data.notes,
       requiresHelper: data.requiresHelper,
