@@ -53,6 +53,17 @@ const serviceFormSchema = z.object({
 
 type ServiceFormValues = z.infer<typeof serviceFormSchema>
 
+// Helper para convertir fecha UTC a formato datetime-local en zona horaria local
+const formatDateTimeLocal = (date: Date | string): string => {
+  const d = new Date(date)
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  const hours = String(d.getHours()).padStart(2, '0')
+  const minutes = String(d.getMinutes()).padStart(2, '0')
+  return `${year}-${month}-${day}T${hours}:${minutes}`
+}
+
 interface ServiceFormProps {
   service?: Service
   initialDate?: Date
@@ -84,7 +95,7 @@ export function ServiceForm({
           clientAddress: service.clientAddress || "",
           type: service.type,
           status: service.status,
-          scheduledDate: new Date(service.scheduledDate).toISOString().slice(0, 16),
+          scheduledDate: formatDateTimeLocal(service.scheduledDate),
           price: service.price || 0,
           origin: service.origin || "",
           destination: service.destination || "",
@@ -101,7 +112,7 @@ export function ServiceForm({
           status: "PENDIENTE",
           requiresHelper: false,
           scheduledDate: initialDate
-            ? new Date(initialDate).toISOString().slice(0, 16)
+            ? formatDateTimeLocal(initialDate)
             : "",
           price: 0,
         },
@@ -116,7 +127,7 @@ export function ServiceForm({
         clientAddress: service.clientAddress || "",
         type: service.type,
         status: service.status,
-        scheduledDate: new Date(service.scheduledDate).toISOString().slice(0, 16),
+        scheduledDate: formatDateTimeLocal(service.scheduledDate),
         price: service.price || 0,
         origin: service.origin || "",
         destination: service.destination || "",
