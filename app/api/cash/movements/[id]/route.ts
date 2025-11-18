@@ -60,6 +60,7 @@ export async function PATCH(
         ...(body.type && { type: body.type }),
         ...(body.amount && { amount: parseFloat(body.amount) }),
         ...(body.method && { method: body.method }),
+        ...(body.transferAccountId !== undefined && { transferAccountId: body.transferAccountId }),
         ...(body.category !== undefined && { category: body.category }),
         ...(body.description !== undefined && { description: body.description }),
         ...(body.date && { date: new Date(body.date) }),

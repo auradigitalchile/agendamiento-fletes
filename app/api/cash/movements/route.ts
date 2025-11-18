@@ -56,9 +56,10 @@ export async function POST(request: NextRequest) {
         type: body.type,
         amount: parseFloat(body.amount),
         method: body.method,
-        category: body.category,
-        description: body.description,
-        relatedService: body.relatedService,
+        transferAccountId: body.transferAccountId || null,
+        category: body.category || null,
+        description: body.description || null,
+        relatedService: body.relatedService || null,
         date: body.date ? new Date(body.date) : new Date(),
       },
     })

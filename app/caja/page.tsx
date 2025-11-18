@@ -47,8 +47,8 @@ export default function CajaPage() {
     queryKey: ["cash-movements", format(today, "yyyy-MM-dd")],
     queryFn: () =>
       getCashMovements({
-        startDate: format(startOfDay(today), "yyyy-MM-dd"),
-        endDate: format(endOfDay(today), "yyyy-MM-dd"),
+        startDate: startOfDay(today).toISOString(),
+        endDate: endOfDay(today).toISOString(),
       }),
   })
 

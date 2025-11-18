@@ -29,8 +29,8 @@ export default function CierreDiarioPage() {
     queryKey: ["cash-movements", selectedDate],
     queryFn: () =>
       getCashMovements({
-        startDate: selectedDate,
-        endDate: selectedDate,
+        startDate: startOfDay(new Date(selectedDate)).toISOString(),
+        endDate: endOfDay(new Date(selectedDate)).toISOString(),
       }),
   })
 

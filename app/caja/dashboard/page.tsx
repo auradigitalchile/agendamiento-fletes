@@ -35,8 +35,8 @@ export default function DashboardPage() {
     queryKey: ["cash-stats"],
     queryFn: () =>
       getCashStats({
-        startDate: format(subDays(new Date(), 30), "yyyy-MM-dd"),
-        endDate: format(new Date(), "yyyy-MM-dd"),
+        startDate: subDays(new Date(), 30).toISOString(),
+        endDate: new Date().toISOString(),
       }),
   })
 
