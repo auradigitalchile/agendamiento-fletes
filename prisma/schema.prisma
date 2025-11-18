@@ -269,8 +269,10 @@ model DailyClose {
   date           DateTime @unique // Fecha del cierre (sin hora)
 
   // Totales por método de pago
-  totalCash      Float    @default(0) // Total en efectivo
-  transferTotals Json?    // JSON con totales por cuenta de transferencia: { "accountId": amount }
+  totalCash              Float    @default(0) // Total en efectivo
+  totalTransferAndres    Float    @default(0) // Total transferencias Andrés
+  totalTransferHermano   Float    @default(0) // Total transferencias Leonardo
+  transferTotals         Json?    // JSON con totales por cuenta de transferencia: { "accountId": amount }
 
   // Gastos del día
   totalExpenses  Float    @default(0)
