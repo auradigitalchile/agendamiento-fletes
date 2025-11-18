@@ -315,6 +315,8 @@ enum CashMovementType {
 enum PaymentMethod {
   EFECTIVO
   TRANSFERENCIA
+  TRANSFERENCIA_ANDRES
+  TRANSFERENCIA_HERMANO
 }
 
 enum ServiceType {
