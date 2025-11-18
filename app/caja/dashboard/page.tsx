@@ -59,8 +59,7 @@ export default function DashboardPage() {
   // Preparar datos para gráfico de distribución de métodos de pago
   const distribucionData = [
     { name: "Efectivo", value: stats.efectivo },
-    { name: "Transfer. Andrés", value: stats.transferenciasAndres },
-    { name: "Transfer. Leonardo", value: stats.transferenciasHermano },
+    ...stats.transferencias.map((t) => ({ name: t.accountName, value: t.total })),
   ].filter((item) => item.value > 0)
 
   return (

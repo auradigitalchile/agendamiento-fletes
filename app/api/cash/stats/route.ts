@@ -48,13 +48,27 @@ export async function GET(request: NextRequest) {
       .filter((m) => m.method === "EFECTIVO")
       .reduce((sum, m) => sum + m.amount, 0)
 
-    const transferenciasAndres = ingresos
-      .filter((m) => m.method === "TRANSFERENCIA_ANDRES")
-      .reduce((sum, m) => sum + m.amount, 0)
+    // Obtener todas las cuentas de transferencia activas
+    const transferAccounts = await prisma.transferAccount.findMany({
+      where: {
+        organizationId,
+        isActive: true,
+      },
+      orderBy: { createdAt: "asc" },
+    })
 
-    const transferenciasHermano = ingresos
-      .filter((m) => m.method === "TRANSFERENCIA_HERMANO")
-      .reduce((sum, m) => sum + m.amount, 0)
+    // Calcular totales por cuenta de transferencia
+    const transferencias = transferAccounts.map((account) => {
+      const total = ingresos
+        .filter((m) => m.method === "TRANSFERENCIA" && m.transferAccountId === account.id)
+        .reduce((sum, m) => sum + m.amount, 0)
+
+      return {
+        accountId: account.id,
+        accountName: account.name,
+        total,
+      }
+    })
 
     // Ingresos por categoría
     const ingresosGrouped = ingresos.reduce((acc, m) => {
@@ -108,8 +122,7 @@ export async function GET(request: NextRequest) {
       totalGastos,
       balance,
       efectivo,
-      transferenciasAndres,
-      transferenciasHermano,
+      transferencias,
       ingresosPorCategoria,
       gastosPorCategoria,
       ingresosUltimas4Semanas,

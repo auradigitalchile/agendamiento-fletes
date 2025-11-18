@@ -34,6 +34,16 @@ export default function CierreDiarioPage() {
       }),
   })
 
+  // Obtener cuentas de transferencia
+  const { data: transferAccounts } = useQuery({
+    queryKey: ["transfer-accounts"],
+    queryFn: async () => {
+      const res = await fetch("/api/transfer-accounts")
+      if (!res.ok) throw new Error("Error al obtener cuentas")
+      return res.json()
+    },
+  })
+
   // Verificar si ya existe cierre para esta fecha
   const { data: existingClose } = useQuery({
     queryKey: ["daily-close", selectedDate],
@@ -60,26 +70,30 @@ export default function CierreDiarioPage() {
     },
   })
 
-  // Calcular totales automáticamente
-  const totales = movements
-    ? movements.reduce(
-        (acc, m) => {
-          if (m.type === "INGRESO") {
-            if (m.method === "EFECTIVO") acc.efectivo += m.amount
-            if (m.method === "TRANSFERENCIA_ANDRES") acc.transferAndres += m.amount
-            if (m.method === "TRANSFERENCIA_HERMANO") acc.transferHermano += m.amount
-          } else {
-            acc.gastos += m.amount
-          }
-          return acc
-        },
-        {
+  // Calcular totales automáticamente por cuenta
+  const totales = movements && transferAccounts
+    ? (() => {
+        const result = {
           efectivo: 0,
-          transferAndres: 0,
-          transferHermano: 0,
           gastos: 0,
+          transferencias: {} as Record<string, number>, // { accountId: total }
         }
-      )
+
+        movements.forEach((m) => {
+          if (m.type === "INGRESO") {
+            if (m.method === "EFECTIVO") {
+              result.efectivo += m.amount
+            } else if (m.method === "TRANSFERENCIA" && m.transferAccountId) {
+              result.transferencias[m.transferAccountId] =
+                (result.transferencias[m.transferAccountId] || 0) + m.amount
+            }
+          } else {
+            result.gastos += m.amount
+          }
+        })
+
+        return result
+      })()
     : null
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -90,8 +104,7 @@ export default function CierreDiarioPage() {
     const cierreData: CreateDailyCloseDTO = {
       date: new Date(selectedDate),
       totalCash: totales.efectivo,
-      totalTransferAndres: totales.transferAndres,
-      totalTransferHermano: totales.transferHermano,
+      transferTotals: totales.transferencias,
       totalExpenses: totales.gastos,
       finalCash: totales.efectivo - totales.gastos,
       notes: notes || undefined,
@@ -157,23 +170,19 @@ export default function CierreDiarioPage() {
                         </span>
                       </div>
 
-                      <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                        <span className="text-sm font-medium text-gray-600">
-                          Transfer. Andrés
-                        </span>
-                        <span className="text-sm font-semibold text-gray-900">
-                          {formatPrice(totales.transferAndres)}
-                        </span>
-                      </div>
-
-                      <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                        <span className="text-sm font-medium text-gray-600">
-                          Transfer. Leonardo
-                        </span>
-                        <span className="text-sm font-semibold text-gray-900">
-                          {formatPrice(totales.transferHermano)}
-                        </span>
-                      </div>
+                      {/* Mostrar cuentas de transferencia dinámicamente */}
+                      {transferAccounts
+                        ?.filter((acc: any) => acc.isActive)
+                        .map((acc: any) => (
+                          <div key={acc.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                            <span className="text-sm font-medium text-gray-600">
+                              {acc.name}
+                            </span>
+                            <span className="text-sm font-semibold text-gray-900">
+                              {formatPrice(totales.transferencias[acc.id] || 0)}
+                            </span>
+                          </div>
+                        ))}
 
                       <div className="flex justify-between items-center p-3 bg-red-50 rounded-lg border border-red-100">
                         <span className="text-sm font-medium text-red-600">
@@ -202,8 +211,7 @@ export default function CierreDiarioPage() {
                         <span className="text-xl font-bold text-green-600">
                           {formatPrice(
                             totales.efectivo +
-                              totales.transferAndres +
-                              totales.transferHermano
+                              Object.values(totales.transferencias).reduce((sum, val) => sum + val, 0)
                           )}
                         </span>
                       </div>

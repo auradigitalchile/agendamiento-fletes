@@ -52,6 +52,16 @@ export default function CajaPage() {
       }),
   })
 
+  // Obtener cuentas de transferencia
+  const { data: transferAccounts } = useQuery({
+    queryKey: ["transfer-accounts"],
+    queryFn: async () => {
+      const res = await fetch("/api/transfer-accounts")
+      if (!res.ok) throw new Error("Error al obtener cuentas")
+      return res.json()
+    },
+  })
+
   // Mutation para crear movimiento
   const createMutation = useMutation({
     mutationFn: createCashMovement,
@@ -91,9 +101,11 @@ export default function CajaPage() {
         (acc, m) => {
           if (m.type === "INGRESO") {
             acc.ingresos += m.amount
-            if (m.method === "EFECTIVO") acc.efectivo += m.amount
-            if (m.method === "TRANSFERENCIA_ANDRES") acc.transferAndres += m.amount
-            if (m.method === "TRANSFERENCIA_HERMANO") acc.transferHermano += m.amount
+            if (m.method === "EFECTIVO") {
+              acc.efectivo += m.amount
+            } else if (m.method === "TRANSFERENCIA") {
+              acc.transferencias += m.amount
+            }
           } else {
             acc.gastos += m.amount
           }
@@ -103,8 +115,7 @@ export default function CajaPage() {
           ingresos: 0,
           gastos: 0,
           efectivo: 0,
-          transferAndres: 0,
-          transferHermano: 0,
+          transferencias: 0,
         }
       )
     : null
@@ -115,6 +126,14 @@ export default function CajaPage() {
       toast({
         title: "Error",
         description: "El monto debe ser mayor a 0",
+        variant: "destructive",
+      })
+      return
+    }
+    if (formData.method === "TRANSFERENCIA" && !formData.transferAccountId) {
+      toast({
+        title: "Error",
+        description: "Debes seleccionar una cuenta de transferencia",
         variant: "destructive",
       })
       return
@@ -195,7 +214,7 @@ export default function CajaPage() {
                 <div>
                   <p className="text-sm font-medium text-gray-600">Transferencias</p>
                   <p className="text-xl font-semibold text-gray-900">
-                    {formatPrice(totales.transferAndres + totales.transferHermano)}
+                    {formatPrice(totales.transferencias)}
                   </p>
                 </div>
               </div>
@@ -253,7 +272,11 @@ export default function CajaPage() {
                         </p>
                       )}
                       <p className="text-xs text-gray-500 mt-1">
-                        {movement.method.replace("_", " ")}
+                        {movement.method === "TRANSFERENCIA" && movement.transferAccountId
+                          ? transferAccounts?.find((acc: any) => acc.id === movement.transferAccountId)?.name || "Transferencia"
+                          : movement.method === "EFECTIVO"
+                          ? "Efectivo"
+                          : "Transferencia"}
                       </p>
                     </div>
                     <div className="text-right">
@@ -321,25 +344,50 @@ export default function CajaPage() {
                 <Label htmlFor="method">Método de Pago</Label>
                 <Select
                   value={formData.method}
-                  onValueChange={(value: any) =>
-                    setFormData({ ...formData, method: value })
-                  }
+                  onValueChange={(value: any) => {
+                    setFormData({
+                      ...formData,
+                      method: value,
+                      transferAccountId: value === "TRANSFERENCIA" ? undefined : undefined,
+                    })
+                  }}
                 >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="EFECTIVO">Efectivo</SelectItem>
-                    <SelectItem value="TRANSFERENCIA_ANDRES">
-                      Transfer. Andrés
-                    </SelectItem>
-                    <SelectItem value="TRANSFERENCIA_HERMANO">
-                      Transfer. Leonardo
-                    </SelectItem>
+                    <SelectItem value="TRANSFERENCIA">Transferencia</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
+
+            {/* Selector de cuenta de transferencia */}
+            {formData.method === "TRANSFERENCIA" && transferAccounts && (
+              <div>
+                <Label htmlFor="transferAccount">Cuenta de Transferencia</Label>
+                <Select
+                  value={formData.transferAccountId}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, transferAccountId: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecciona una cuenta" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {transferAccounts
+                      .filter((acc: any) => acc.isActive)
+                      .map((acc: any) => (
+                        <SelectItem key={acc.id} value={acc.id}>
+                          {acc.name}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             <div>
               <Label htmlFor="amount">Monto</Label>

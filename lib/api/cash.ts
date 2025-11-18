@@ -5,7 +5,8 @@ export interface CashMovement {
   organizationId: string
   type: "INGRESO" | "GASTO"
   amount: number
-  method: "EFECTIVO" | "TRANSFERENCIA_ANDRES" | "TRANSFERENCIA_HERMANO"
+  method: "EFECTIVO" | "TRANSFERENCIA"
+  transferAccountId?: string | null
   category?: string
   description?: string
   relatedService?: string
@@ -17,7 +18,8 @@ export interface CashMovement {
 export interface CreateCashMovementDTO {
   type: "INGRESO" | "GASTO"
   amount: number
-  method: "EFECTIVO" | "TRANSFERENCIA_ANDRES" | "TRANSFERENCIA_HERMANO"
+  method: "EFECTIVO" | "TRANSFERENCIA"
+  transferAccountId?: string
   category?: string
   description?: string
   relatedService?: string
@@ -29,8 +31,7 @@ export interface DailyClose {
   organizationId: string
   date: Date | string
   totalCash: number
-  totalTransferAndres: number
-  totalTransferHermano: number
+  transferTotals?: Record<string, number> // { accountId: amount }
   totalExpenses: number
   finalCash: number
   notes?: string
@@ -42,8 +43,7 @@ export interface DailyClose {
 export interface CreateDailyCloseDTO {
   date: Date | string
   totalCash: number
-  totalTransferAndres: number
-  totalTransferHermano: number
+  transferTotals?: Record<string, number> // { accountId: amount }
   totalExpenses: number
   finalCash: number
   notes?: string
@@ -54,8 +54,7 @@ export interface CashStats {
   totalGastos: number
   balance: number
   efectivo: number
-  transferenciasAndres: number
-  transferenciasHermano: number
+  transferencias: { accountId: string; accountName: string; total: number }[]
   ingresosPorCategoria: { category: string; total: number }[]
   gastosPorCategoria: { category: string; total: number }[]
   ingresosUltimas4Semanas: { semana: string; total: number }[]
