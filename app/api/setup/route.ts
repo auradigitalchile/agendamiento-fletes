@@ -22,7 +22,7 @@ export async function GET() {
 
       -- Crear enum PaymentMethod si no existe
       DO $$ BEGIN
-        CREATE TYPE "PaymentMethod" AS ENUM ('EFECTIVO', 'TRANSFERENCIA_ANDRES', 'TRANSFERENCIA_HERMANO');
+        CREATE TYPE "PaymentMethod" AS ENUM ('EFECTIVO', 'TRANSFERENCIA');
       EXCEPTION
         WHEN duplicate_object THEN null;
       END $$;
@@ -121,6 +121,21 @@ export async function GET() {
     `)
 
     await prisma.$executeRawUnsafe(`
+      -- Crear tabla transfer_accounts si no existe
+      CREATE TABLE IF NOT EXISTS "transfer_accounts" (
+        "id" TEXT NOT NULL,
+        "organizationId" TEXT NOT NULL,
+        "name" TEXT NOT NULL,
+        "isActive" BOOLEAN NOT NULL DEFAULT true,
+        "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        "updatedAt" TIMESTAMP(3) NOT NULL,
+        CONSTRAINT "transfer_accounts_pkey" PRIMARY KEY ("id")
+      );
+
+      CREATE INDEX IF NOT EXISTS "transfer_accounts_organizationId_idx" ON "transfer_accounts"("organizationId");
+    `)
+
+    await prisma.$executeRawUnsafe(`
       -- Crear tabla cash_movements si no existe
       CREATE TABLE IF NOT EXISTS "cash_movements" (
         "id" TEXT NOT NULL,
@@ -128,6 +143,7 @@ export async function GET() {
         "type" "CashMovementType" NOT NULL,
         "amount" DOUBLE PRECISION NOT NULL,
         "method" "PaymentMethod" NOT NULL,
+        "transferAccountId" TEXT,
         "category" TEXT,
         "description" TEXT,
         "relatedService" TEXT,
@@ -141,6 +157,7 @@ export async function GET() {
       CREATE INDEX IF NOT EXISTS "cash_movements_date_idx" ON "cash_movements"("date");
       CREATE INDEX IF NOT EXISTS "cash_movements_type_idx" ON "cash_movements"("type");
       CREATE INDEX IF NOT EXISTS "cash_movements_method_idx" ON "cash_movements"("method");
+      CREATE INDEX IF NOT EXISTS "cash_movements_transferAccountId_idx" ON "cash_movements"("transferAccountId");
     `)
 
     await prisma.$executeRawUnsafe(`
@@ -150,8 +167,7 @@ export async function GET() {
         "organizationId" TEXT NOT NULL,
         "date" TIMESTAMP(3) NOT NULL,
         "totalCash" DOUBLE PRECISION NOT NULL DEFAULT 0,
-        "totalTransferAndres" DOUBLE PRECISION NOT NULL DEFAULT 0,
-        "totalTransferHermano" DOUBLE PRECISION NOT NULL DEFAULT 0,
+        "transferTotals" JSONB,
         "totalExpenses" DOUBLE PRECISION NOT NULL DEFAULT 0,
         "finalCash" DOUBLE PRECISION NOT NULL DEFAULT 0,
         "notes" TEXT,

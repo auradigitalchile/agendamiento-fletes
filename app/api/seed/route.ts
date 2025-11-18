@@ -20,6 +20,35 @@ export async function GET() {
     const organizationId = "temp-org-id"
     const now = new Date()
 
+    // Crear cuentas de transferencia si no existen
+    let account1 = await prisma.transferAccount.findFirst({
+      where: { organizationId, name: "Transfer. Andrés" }
+    })
+
+    if (!account1) {
+      account1 = await prisma.transferAccount.create({
+        data: {
+          organizationId,
+          name: "Transfer. Andrés",
+          isActive: true
+        }
+      })
+    }
+
+    let account2 = await prisma.transferAccount.findFirst({
+      where: { organizationId, name: "Transfer. Leonardo" }
+    })
+
+    if (!account2) {
+      account2 = await prisma.transferAccount.create({
+        data: {
+          organizationId,
+          name: "Transfer. Leonardo",
+          isActive: true
+        }
+      })
+    }
+
     // Crear movimientos de ejemplo de los últimos 30 días
     const movements: Prisma.CashMovementCreateManyInput[] = []
 
@@ -42,7 +71,8 @@ export async function GET() {
           organizationId,
           type: CashMovementType.INGRESO,
           amount: 65000,
-          method: PaymentMethod.TRANSFERENCIA_ANDRES,
+          method: PaymentMethod.TRANSFERENCIA,
+          transferAccountId: account1.id,
           category: "Servicio Mudanza",
           description: "Mudanza departamento",
           date,
@@ -78,7 +108,8 @@ export async function GET() {
           organizationId,
           type: CashMovementType.INGRESO,
           amount: 85000,
-          method: PaymentMethod.TRANSFERENCIA_HERMANO,
+          method: PaymentMethod.TRANSFERENCIA,
+          transferAccountId: account2.id,
           category: "Servicio Escombros",
           description: "Retiro escombros obra",
           date,
@@ -114,7 +145,8 @@ export async function GET() {
           organizationId,
           type: CashMovementType.INGRESO,
           amount: 75000,
-          method: PaymentMethod.TRANSFERENCIA_ANDRES,
+          method: PaymentMethod.TRANSFERENCIA,
+          transferAccountId: account1.id,
           category: "Servicio Mudanza",
           description: "Mudanza oficina",
           date,
@@ -123,7 +155,8 @@ export async function GET() {
           organizationId,
           type: CashMovementType.INGRESO,
           amount: 95000,
-          method: PaymentMethod.TRANSFERENCIA_HERMANO,
+          method: PaymentMethod.TRANSFERENCIA,
+          transferAccountId: account2.id,
           category: "Servicio Mudanza",
           description: "Mudanza casa completa",
           date,
@@ -168,7 +201,8 @@ export async function GET() {
           organizationId,
           type: CashMovementType.INGRESO,
           amount: 120000,
-          method: PaymentMethod.TRANSFERENCIA_ANDRES,
+          method: PaymentMethod.TRANSFERENCIA,
+          transferAccountId: account1.id,
           category: "Servicio Mudanza",
           description: "Mudanza casa 2 pisos",
           date,
@@ -200,7 +234,8 @@ export async function GET() {
         organizationId,
         type: "INGRESO",
         amount: 80000,
-        method: "TRANSFERENCIA_ANDRES",
+        method: "TRANSFERENCIA",
+        transferAccountId: account1.id,
         category: "Servicio Mudanza",
         description: "Mudanza departamento 3 dorm",
         date: now,
@@ -218,7 +253,8 @@ export async function GET() {
         organizationId,
         type: "INGRESO",
         amount: 55000,
-        method: "TRANSFERENCIA_HERMANO",
+        method: "TRANSFERENCIA",
+        transferAccountId: account2.id,
         category: "Servicio Escombros",
         description: "Retiro escombros remodelación",
         date: now,
@@ -255,12 +291,18 @@ export async function GET() {
       closeDate.setDate(closeDate.getDate() - i)
       closeDate.setHours(0, 0, 0, 0)
 
+      const cashTotal = Math.floor(Math.random() * 100000) + 50000
+      const transfer1Total = Math.floor(Math.random() * 150000) + 80000
+      const transfer2Total = Math.floor(Math.random() * 120000) + 60000
+
       cierres.push({
         organizationId,
         date: closeDate,
-        totalCash: Math.floor(Math.random() * 100000) + 50000,
-        totalTransferAndres: Math.floor(Math.random() * 150000) + 80000,
-        totalTransferHermano: Math.floor(Math.random() * 120000) + 60000,
+        totalCash: cashTotal,
+        transferTotals: {
+          [account1.id]: transfer1Total,
+          [account2.id]: transfer2Total,
+        },
         totalExpenses: Math.floor(Math.random() * 40000) + 15000,
         finalCash: Math.floor(Math.random() * 80000) + 40000,
         notes: `Cierre del ${closeDate.toLocaleDateString()}`,
