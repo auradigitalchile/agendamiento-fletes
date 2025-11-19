@@ -135,14 +135,46 @@ export default function CierreDiarioPage() {
                   <CalendarIcon className="h-4 w-4" />
                   Seleccionar Fecha
                 </Label>
-                <Input
-                  id="date"
-                  type="date"
-                  value={selectedDate}
-                  onChange={(e) => setSelectedDate(e.target.value)}
-                  max={getTodayString()}
-                  className="mt-2"
-                />
+                <div className="relative mt-2">
+                  <Input
+                    id="date"
+                    type="date"
+                    value={selectedDate}
+                    onChange={(e) => setSelectedDate(e.target.value)}
+                    max={getTodayString()}
+                    className="cursor-pointer"
+                    onClick={(e) => {
+                      // Forzar que se abra el calendario nativo al hacer clic
+                      const input = e.currentTarget
+                      try {
+                        input.showPicker?.()
+                      } catch (error) {
+                        // showPicker puede fallar en algunos navegadores, ignorar el error
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      // Prevenir el comportamiento de flechas arriba/abajo con números
+                      // Solo permitir teclas de navegación y enter
+                      const allowedKeys = ['Tab', 'Escape', 'Enter', 'Backspace', 'Delete', 'ArrowLeft', 'ArrowRight']
+                      if (!allowedKeys.includes(e.key) && !/^[0-9]$/.test(e.key)) {
+                        return
+                      }
+                      // Si presiona un número, abrir el picker en lugar de cambiar el valor
+                      if (/^[0-9]$/.test(e.key)) {
+                        e.preventDefault()
+                        const input = e.currentTarget
+                        try {
+                          input.showPicker?.()
+                        } catch (error) {
+                          // Ignorar error
+                        }
+                      }
+                    }}
+                  />
+                  <p className="text-xs text-gray-500 mt-1.5">
+                    Haz clic para abrir el calendario
+                  </p>
+                </div>
               </div>
 
               {existingClose ? (
