@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Plus, ArrowUpCircle, ArrowDownCircle, Wallet, CreditCard } from "lucide-react"
-import { format, startOfDay, endOfDay } from "date-fns"
+import { format } from "date-fns"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -30,7 +30,7 @@ import {
   type CashMovement,
   type CreateCashMovementDTO,
 } from "@/lib/api/cash"
-import { formatPrice } from "@/lib/utils"
+import { formatPrice, getTodayString, getLocalStartOfDay, getLocalEndOfDay } from "@/lib/utils"
 
 export default function CajaPage() {
   const [isFormOpen, setIsFormOpen] = useState(false)
@@ -43,12 +43,13 @@ export default function CajaPage() {
 
   // Obtener movimientos del día actual
   const today = new Date()
+  const todayString = getTodayString()
   const { data: movements, isLoading } = useQuery({
-    queryKey: ["cash-movements", format(today, "yyyy-MM-dd")],
+    queryKey: ["cash-movements", todayString],
     queryFn: () =>
       getCashMovements({
-        startDate: startOfDay(today).toISOString(),
-        endDate: endOfDay(today).toISOString(),
+        startDate: getLocalStartOfDay(todayString).toISOString(),
+        endDate: getLocalEndOfDay(todayString).toISOString(),
       }),
   })
 

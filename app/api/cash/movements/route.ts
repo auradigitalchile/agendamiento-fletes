@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { getOrganizationId } from "@/lib/session"
+import { startOfDay, endOfDay } from "date-fns"
 
 // Force dynamic rendering for this route
 export const dynamic = 'force-dynamic'
@@ -18,11 +19,11 @@ export async function GET(request: NextRequest) {
     const where: any = { organizationId }
 
     if (startDate) {
-      where.date = { ...where.date, gte: new Date(startDate) }
+      where.date = { ...where.date, gte: startOfDay(new Date(startDate)) }
     }
 
     if (endDate) {
-      where.date = { ...where.date, lte: new Date(endDate) }
+      where.date = { ...where.date, lte: endOfDay(new Date(endDate)) }
     }
 
     if (type) {

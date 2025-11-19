@@ -103,3 +103,49 @@ export function getDebrisQuantityLabel(quantity: string): string {
   }
   return labels[quantity] || quantity
 }
+
+/**
+ * Parsea una fecha string (yyyy-MM-dd) como fecha local, NO como UTC
+ * Esto evita el problema de timezone donde "2024-11-19" se interpreta como UTC
+ */
+export function parseLocalDate(dateString: string): Date {
+  const [year, month, day] = dateString.split('-').map(Number)
+  return new Date(year, month - 1, day)
+}
+
+/**
+ * Obtiene el inicio del día (00:00:00.000) para una fecha dada
+ * Funciona con el timezone local del navegador/servidor
+ */
+export function getLocalStartOfDay(date: Date | string): Date {
+  const d = typeof date === 'string' ? parseLocalDate(date) : new Date(date)
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0)
+}
+
+/**
+ * Obtiene el fin del día (23:59:59.999) para una fecha dada
+ * Funciona con el timezone local del navegador/servidor
+ */
+export function getLocalEndOfDay(date: Date | string): Date {
+  const d = typeof date === 'string' ? parseLocalDate(date) : new Date(date)
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999)
+}
+
+/**
+ * Convierte un string de fecha a medianoche local y retorna ISO string
+ * Útil para enviar fechas al backend manteniendo el día correcto
+ */
+export function toLocalMidnight(dateString: string): string {
+  return getLocalStartOfDay(dateString).toISOString()
+}
+
+/**
+ * Obtiene la fecha actual en formato yyyy-MM-dd
+ */
+export function getTodayString(): string {
+  const today = new Date()
+  const year = today.getFullYear()
+  const month = String(today.getMonth() + 1).padStart(2, '0')
+  const day = String(today.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}

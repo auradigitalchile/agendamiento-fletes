@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { format, startOfDay, endOfDay } from "date-fns"
+import { format } from "date-fns"
 import { Calendar as CalendarIcon, CheckCircle2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -16,10 +16,10 @@ import {
   getDailyCloseByDate,
   type CreateDailyCloseDTO,
 } from "@/lib/api/cash"
-import { formatPrice } from "@/lib/utils"
+import { formatPrice, getTodayString, getLocalStartOfDay, getLocalEndOfDay, parseLocalDate } from "@/lib/utils"
 
 export default function CierreDiarioPage() {
-  const [selectedDate, setSelectedDate] = useState(format(new Date(), "yyyy-MM-dd"))
+  const [selectedDate, setSelectedDate] = useState(getTodayString())
   const [notes, setNotes] = useState("")
   const { toast } = useToast()
   const queryClient = useQueryClient()
@@ -29,8 +29,8 @@ export default function CierreDiarioPage() {
     queryKey: ["cash-movements", selectedDate],
     queryFn: () =>
       getCashMovements({
-        startDate: startOfDay(new Date(selectedDate)).toISOString(),
-        endDate: endOfDay(new Date(selectedDate)).toISOString(),
+        startDate: getLocalStartOfDay(selectedDate).toISOString(),
+        endDate: getLocalEndOfDay(selectedDate).toISOString(),
       }),
   })
 
@@ -102,7 +102,7 @@ export default function CierreDiarioPage() {
     if (!totales) return
 
     const cierreData: CreateDailyCloseDTO = {
-      date: new Date(selectedDate),
+      date: parseLocalDate(selectedDate),
       totalCash: totales.efectivo,
       transferTotals: totales.transferencias,
       totalExpenses: totales.gastos,
@@ -140,7 +140,7 @@ export default function CierreDiarioPage() {
                   type="date"
                   value={selectedDate}
                   onChange={(e) => setSelectedDate(e.target.value)}
-                  max={format(new Date(), "yyyy-MM-dd")}
+                  max={getTodayString()}
                   className="mt-2"
                 />
               </div>
