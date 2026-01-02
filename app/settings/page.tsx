@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Header } from "@/components/layout/header"
-import { Lock, Mail, CreditCard, Plus, Pencil, Trash2 } from "lucide-react"
+import { Lock, Mail, CreditCard, Plus, Pencil, Trash2, Tag } from "lucide-react"
 import {
   getTransferAccounts,
   createTransferAccount,
@@ -38,6 +38,11 @@ export default function SettingsPage() {
   const [editingAccount, setEditingAccount] = useState<TransferAccount | null>(null)
   const [accountName, setAccountName] = useState("")
 
+  // Categories State
+  const [showCategoryForm, setShowCategoryForm] = useState(false)
+  const [categoryName, setCategoryName] = useState("")
+  const [categoryType, setCategoryType] = useState<"INGRESO" | "GASTO">("INGRESO")
+
   useEffect(() => {
     fetch("/api/auth/session")
       .then((res) => res.json())
@@ -49,6 +54,17 @@ export default function SettingsPage() {
     queryKey: ["transfer-accounts"],
     queryFn: getTransferAccounts,
     enabled: activeTab === "transfer-accounts",
+  })
+
+  // Query para obtener categorías
+  const { data: categories, isLoading: categoriesLoading } = useQuery({
+    queryKey: ["categories-all"],
+    queryFn: async () => {
+      const res = await fetch("/api/categories")
+      if (!res.ok) throw new Error("Error al obtener categorías")
+      return res.json()
+    },
+    enabled: activeTab === "categories",
   })
 
   // Debug logging
@@ -115,6 +131,65 @@ export default function SettingsPage() {
       toast({
         title: "Error",
         description: error.message || "No se pudo eliminar la cuenta",
+        variant: "destructive",
+      })
+    },
+  })
+
+  // Mutation para crear categoría
+  const createCategoryMutation = useMutation({
+    mutationFn: async (data: { name: string; type: string }) => {
+      const res = await fetch("/api/categories", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      })
+      if (!res.ok) {
+        const error = await res.json()
+        throw new Error(error.error || "Error al crear categoría")
+      }
+      return res.json()
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["categories-all"] })
+      queryClient.invalidateQueries({ queryKey: ["categories"] })
+      setShowCategoryForm(false)
+      setCategoryName("")
+      toast({
+        title: "Categoría creada",
+        description: "La categoría ha sido creada exitosamente",
+      })
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo crear la categoría",
+        variant: "destructive",
+      })
+    },
+  })
+
+  // Mutation para eliminar categoría
+  const deleteCategoryMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/categories/${id}`, {
+        method: "DELETE",
+      })
+      if (!res.ok) throw new Error("Error al eliminar categoría")
+      return res.json()
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["categories-all"] })
+      queryClient.invalidateQueries({ queryKey: ["categories"] })
+      toast({
+        title: "Categoría desactivada",
+        description: "La categoría ha sido desactivada exitosamente",
+      })
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo eliminar la categoría",
         variant: "destructive",
       })
     },
@@ -231,6 +306,22 @@ export default function SettingsPage() {
     }
   }
 
+  const handleCreateCategory = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!categoryName.trim()) return
+
+    await createCategoryMutation.mutateAsync({
+      name: categoryName.trim(),
+      type: categoryType,
+    })
+  }
+
+  const handleDeleteCategory = async (id: string) => {
+    if (confirm("¿Estás seguro de que deseas desactivar esta categoría?")) {
+      await deleteCategoryMutation.mutateAsync(id)
+    }
+  }
+
   return (
     <div className="flex flex-col h-full">
       <Header title="Configuración de Cuenta" />
@@ -272,6 +363,17 @@ export default function SettingsPage() {
               >
                 <CreditCard className="h-4 w-4" />
                 Cuentas de Transferencia
+              </button>
+              <button
+                onClick={() => setActiveTab("categories")}
+                className={`${
+                  activeTab === "categories"
+                    ? "border-blue-500 text-blue-600"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2`}
+              >
+                <Tag className="h-4 w-4" />
+                Categorías
               </button>
             </nav>
           </div>
@@ -521,6 +623,156 @@ export default function SettingsPage() {
               ) : (
                 <div className="text-center py-8 text-gray-500">
                   No hay cuentas de transferencia. Crea una para empezar.
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Categories Tab */}
+          {activeTab === "categories" && (
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900">Categorías de Caja</h2>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Administra las categorías para tus movimientos de caja
+                  </p>
+                </div>
+                {!showCategoryForm && (
+                  <button
+                    onClick={() => setShowCategoryForm(true)}
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Nueva Categoría
+                  </button>
+                )}
+              </div>
+
+              {/* Formulario para crear categoría */}
+              {showCategoryForm && (
+                <form onSubmit={handleCreateCategory} className="mb-6 p-4 bg-gray-50 rounded-md border border-gray-200">
+                  <h3 className="text-sm font-medium text-gray-900 mb-3">Nueva Categoría</h3>
+                  <div className="space-y-3">
+                    <div className="flex gap-3">
+                      <select
+                        value={categoryType}
+                        onChange={(e) => setCategoryType(e.target.value as any)}
+                        className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        <option value="INGRESO">Ingreso</option>
+                        <option value="GASTO">Gasto</option>
+                      </select>
+                      <input
+                        type="text"
+                        placeholder="Nombre de la categoría"
+                        value={categoryName}
+                        onChange={(e) => setCategoryName(e.target.value)}
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        required
+                      />
+                    </div>
+                    <div className="flex gap-3">
+                      <button
+                        type="submit"
+                        disabled={createCategoryMutation.isPending}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                      >
+                        {createCategoryMutation.isPending ? "Creando..." : "Crear"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowCategoryForm(false)
+                          setCategoryName("")
+                        }}
+                        className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              )}
+
+              {/* Lista de categorías */}
+              {categoriesLoading ? (
+                <div className="text-center py-8 text-gray-500">
+                  Cargando categorías...
+                </div>
+              ) : categories && categories.length > 0 ? (
+                <div className="space-y-4">
+                  {/* Categorías de Ingresos */}
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                      <span className="inline-block w-3 h-3 bg-green-500 rounded-full"></span>
+                      Ingresos
+                    </h3>
+                    <div className="space-y-2">
+                      {categories
+                        .filter((cat: any) => cat.type === "INGRESO")
+                        .map((cat: any) => (
+                          <div
+                            key={cat.id}
+                            className="flex items-center justify-between p-3 border border-gray-200 rounded-md hover:bg-gray-50"
+                          >
+                            <div className="flex items-center gap-3">
+                              <Tag className="h-4 w-4 text-gray-400" />
+                              <span className="text-sm font-medium text-gray-900">{cat.name}</span>
+                            </div>
+                            <button
+                              onClick={() => handleDeleteCategory(cat.id)}
+                              className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-md"
+                              title="Desactivar"
+                              disabled={deleteCategoryMutation.isPending}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        ))}
+                      {categories.filter((cat: any) => cat.type === "INGRESO").length === 0 && (
+                        <p className="text-sm text-gray-500 italic p-3">No hay categorías de ingresos</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Categorías de Gastos */}
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                      <span className="inline-block w-3 h-3 bg-red-500 rounded-full"></span>
+                      Gastos
+                    </h3>
+                    <div className="space-y-2">
+                      {categories
+                        .filter((cat: any) => cat.type === "GASTO")
+                        .map((cat: any) => (
+                          <div
+                            key={cat.id}
+                            className="flex items-center justify-between p-3 border border-gray-200 rounded-md hover:bg-gray-50"
+                          >
+                            <div className="flex items-center gap-3">
+                              <Tag className="h-4 w-4 text-gray-400" />
+                              <span className="text-sm font-medium text-gray-900">{cat.name}</span>
+                            </div>
+                            <button
+                              onClick={() => handleDeleteCategory(cat.id)}
+                              className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-md"
+                              title="Desactivar"
+                              disabled={deleteCategoryMutation.isPending}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        ))}
+                      {categories.filter((cat: any) => cat.type === "GASTO").length === 0 && (
+                        <p className="text-sm text-gray-500 italic p-3">No hay categorías de gastos</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  No hay categorías. Crea algunas para empezar.
                 </div>
               )}
             </div>

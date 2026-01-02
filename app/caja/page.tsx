@@ -63,6 +63,17 @@ export default function CajaPage() {
     },
   })
 
+  // Obtener categorías según el tipo de movimiento
+  const { data: categories } = useQuery({
+    queryKey: ["categories", formData.type],
+    queryFn: async () => {
+      const res = await fetch(`/api/categories?type=${formData.type}`)
+      if (!res.ok) throw new Error("Error al obtener categorías")
+      return res.json()
+    },
+    enabled: !!formData.type,
+  })
+
   // Mutation para crear movimiento
   const createMutation = useMutation({
     mutationFn: createCashMovement,
@@ -407,14 +418,29 @@ export default function CajaPage() {
 
             <div>
               <Label htmlFor="category">Categoría</Label>
-              <Input
-                id="category"
-                placeholder="Ej: Servicio, Combustible, Mantención..."
+              <Select
                 value={formData.category || ""}
-                onChange={(e) =>
-                  setFormData({ ...formData, category: e.target.value })
+                onValueChange={(value) =>
+                  setFormData({ ...formData, category: value })
                 }
-              />
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecciona una categoría" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories && categories.length > 0 ? (
+                    categories.map((cat: any) => (
+                      <SelectItem key={cat.id} value={cat.name}>
+                        {cat.name}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <div className="p-2 text-sm text-gray-500 text-center">
+                      No hay categorías. Ve a Configuración para crear algunas.
+                    </div>
+                  )}
+                </SelectContent>
+              </Select>
             </div>
 
             <div>

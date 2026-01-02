@@ -40,6 +40,7 @@ const serviceSchema = z.object({
 /**
  * GET /api/services
  * Obtiene todos los servicios con filtros opcionales
+ * Archiva automáticamente servicios cuya fecha ya pasó
  */
 export async function GET(request: NextRequest) {
   try {
@@ -50,6 +51,24 @@ export async function GET(request: NextRequest) {
     const clientId = searchParams.get("clientId")
     const startDate = searchParams.get("startDate")
     const endDate = searchParams.get("endDate")
+
+    // Auto-archivar servicios cuya fecha programada ya pasó (hace más de 1 día)
+    const yesterday = new Date()
+    yesterday.setDate(yesterday.getDate() - 1)
+    yesterday.setHours(0, 0, 0, 0)
+
+    await prisma.service.updateMany({
+      where: {
+        organizationId,
+        archived: false,
+        scheduledDate: {
+          lt: yesterday,
+        },
+      },
+      data: {
+        archived: true,
+      },
+    })
 
     const services = await prisma.service.findMany({
       where: {

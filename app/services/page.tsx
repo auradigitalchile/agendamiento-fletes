@@ -1,11 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { Plus, FileDown, Pencil } from "lucide-react"
+import { Plus, FileDown, Pencil, Archive } from "lucide-react"
 import { format } from "date-fns"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ServiceForm } from "@/components/services/service-form"
 import { useToast } from "@/components/ui/use-toast"
 import {
@@ -25,6 +26,7 @@ import {
 export default function ServicesPage() {
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [selectedService, setSelectedService] = useState<Service | undefined>()
+  const [activeTab, setActiveTab] = useState<"pending" | "archived">("pending")
   const { toast } = useToast()
   const queryClient = useQueryClient()
 
@@ -33,6 +35,15 @@ export default function ServicesPage() {
     queryKey: ["services"],
     queryFn: () => getServices(),
   })
+
+  // Separar servicios en pendientes y archivados
+  const pendingServices = useMemo(() => {
+    return services?.filter((s: any) => !s.archived) || []
+  }, [services])
+
+  const archivedServices = useMemo(() => {
+    return services?.filter((s: any) => s.archived) || []
+  }, [services])
 
   // Mutation para crear servicio
   const createMutation = useMutation({
@@ -122,6 +133,154 @@ export default function ServicesPage() {
     return colors[type] || "bg-gray-50 text-gray-700 border-gray-200"
   }
 
+  const renderServicesList = (servicesList: Service[]) => {
+    if (servicesList.length === 0) {
+      return (
+        <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
+          <p className="text-sm text-gray-500">
+            {activeTab === "pending"
+              ? "No hay servicios pendientes"
+              : "No hay servicios archivados"}
+          </p>
+        </div>
+      )
+    }
+
+    return (
+      <>
+        {/* Vista Desktop - Tabla compacta */}
+        <div className="hidden md:block bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-100 bg-gray-50/50">
+                  <th className="text-left px-4 py-2.5 font-medium text-gray-600 text-xs uppercase tracking-wide">
+                    Fecha
+                  </th>
+                  <th className="text-left px-4 py-2.5 font-medium text-gray-600 text-xs uppercase tracking-wide">
+                    Cliente
+                  </th>
+                  <th className="text-left px-4 py-2.5 font-medium text-gray-600 text-xs uppercase tracking-wide">
+                    Tipo
+                  </th>
+                  <th className="text-left px-4 py-2.5 font-medium text-gray-600 text-xs uppercase tracking-wide">
+                    Precio
+                  </th>
+                  <th className="text-left px-4 py-2.5 font-medium text-gray-600 text-xs uppercase tracking-wide">
+                    Estado
+                  </th>
+                  <th className="text-right px-4 py-2.5 font-medium text-gray-600 text-xs uppercase tracking-wide">
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {servicesList.map((service) => (
+                  <tr
+                    key={service.id}
+                    className="group hover:bg-gray-50/50 transition-colors"
+                  >
+                    <td className="px-4 py-2.5">
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium text-gray-900">
+                          {format(new Date(service.scheduledDate), "dd/MM/yyyy")}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          {format(new Date(service.scheduledDate), "HH:mm")}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-2.5">
+                      <span className="text-sm font-medium text-gray-900">
+                        {service.clientName}
+                      </span>
+                    </td>
+                    <td className="px-4 py-2.5">
+                      <Badge
+                        variant="outline"
+                        className={`text-xs font-medium px-2 py-0.5 rounded-full border ${getTypeColor(service.type)}`}
+                      >
+                        {getServiceTypeLabel(service.type)}
+                      </Badge>
+                    </td>
+                    <td className="px-4 py-2.5">
+                      <span className="text-sm font-semibold text-gray-900">
+                        {formatPrice(service.price)}
+                      </span>
+                    </td>
+                    <td className="px-4 py-2.5">
+                      <Badge
+                        variant="outline"
+                        className={`text-xs font-medium px-2 py-0.5 rounded-full border ${getStatusColor(service.status)}`}
+                      >
+                        {getServiceStatusLabel(service.status)}
+                      </Badge>
+                    </td>
+                    <td className="px-4 py-2.5 text-right">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEdit(service)}
+                        className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Vista Mobile - Cards */}
+        <div className="md:hidden space-y-3">
+          {servicesList.map((service) => (
+            <div
+              key={service.id}
+              className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 hover:shadow-md transition-all"
+              onClick={() => handleEdit(service)}
+            >
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-xs font-medium text-gray-500">
+                      {format(new Date(service.scheduledDate), "dd/MM/yyyy")}
+                    </span>
+                    <span className="text-xs text-gray-400">•</span>
+                    <span className="text-xs font-medium text-gray-500">
+                      {format(new Date(service.scheduledDate), "HH:mm")}
+                    </span>
+                  </div>
+                  <h3 className="text-base font-semibold text-gray-900">
+                    {service.clientName}
+                  </h3>
+                </div>
+                <span className="text-base font-bold text-gray-900">
+                  {formatPrice(service.price)}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Badge
+                  variant="outline"
+                  className={`text-xs font-medium px-2.5 py-0.5 rounded-full border ${getTypeColor(service.type)}`}
+                >
+                  {getServiceTypeLabel(service.type)}
+                </Badge>
+                <Badge
+                  variant="outline"
+                  className={`text-xs font-medium px-2.5 py-0.5 rounded-full border ${getStatusColor(service.status)}`}
+                >
+                  {getServiceStatusLabel(service.status)}
+                </Badge>
+              </div>
+            </div>
+          ))}
+        </div>
+      </>
+    )
+  }
+
   return (
     <div className="flex h-full flex-col">
       <div className="flex-1 space-y-4 sm:space-y-6 p-4 sm:p-6 lg:p-8">
@@ -152,150 +311,37 @@ export default function ServicesPage() {
           </div>
         </div>
 
-        {/* Tabla de servicios - Desktop */}
+        {/* Tabs de Pendientes/Archivados */}
         {isLoading ? (
           <div className="text-center py-12 text-muted-foreground text-sm">
             Cargando servicios...
           </div>
-        ) : services && services.length > 0 ? (
-          <>
-            {/* Vista Desktop - Tabla compacta */}
-            <div className="hidden md:block bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-gray-100 bg-gray-50/50">
-                      <th className="text-left px-4 py-2.5 font-medium text-gray-600 text-xs uppercase tracking-wide">
-                        Fecha
-                      </th>
-                      <th className="text-left px-4 py-2.5 font-medium text-gray-600 text-xs uppercase tracking-wide">
-                        Cliente
-                      </th>
-                      <th className="text-left px-4 py-2.5 font-medium text-gray-600 text-xs uppercase tracking-wide">
-                        Tipo
-                      </th>
-                      <th className="text-left px-4 py-2.5 font-medium text-gray-600 text-xs uppercase tracking-wide">
-                        Precio
-                      </th>
-                      <th className="text-left px-4 py-2.5 font-medium text-gray-600 text-xs uppercase tracking-wide">
-                        Estado
-                      </th>
-                      <th className="text-right px-4 py-2.5 font-medium text-gray-600 text-xs uppercase tracking-wide">
-
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {services.map((service) => (
-                      <tr
-                        key={service.id}
-                        className="group hover:bg-gray-50/50 transition-colors"
-                      >
-                        <td className="px-4 py-2.5">
-                          <div className="flex flex-col">
-                            <span className="text-sm font-medium text-gray-900">
-                              {format(new Date(service.scheduledDate), "dd/MM/yyyy")}
-                            </span>
-                            <span className="text-xs text-gray-500">
-                              {format(new Date(service.scheduledDate), "HH:mm")}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="px-4 py-2.5">
-                          <span className="text-sm font-medium text-gray-900">
-                            {service.clientName}
-                          </span>
-                        </td>
-                        <td className="px-4 py-2.5">
-                          <Badge
-                            variant="outline"
-                            className={`text-xs font-medium px-2 py-0.5 rounded-full border ${getTypeColor(service.type)}`}
-                          >
-                            {getServiceTypeLabel(service.type)}
-                          </Badge>
-                        </td>
-                        <td className="px-4 py-2.5">
-                          <span className="text-sm font-semibold text-gray-900">
-                            {formatPrice(service.price)}
-                          </span>
-                        </td>
-                        <td className="px-4 py-2.5">
-                          <Badge
-                            variant="outline"
-                            className={`text-xs font-medium px-2 py-0.5 rounded-full border ${getStatusColor(service.status)}`}
-                          >
-                            {getServiceStatusLabel(service.status)}
-                          </Badge>
-                        </td>
-                        <td className="px-4 py-2.5 text-right">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEdit(service)}
-                            className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            <Pencil className="h-3.5 w-3.5" />
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* Vista Mobile - Cards */}
-            <div className="md:hidden space-y-3">
-              {services.map((service) => (
-                <div
-                  key={service.id}
-                  className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 hover:shadow-md transition-all"
-                  onClick={() => handleEdit(service)}
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xs font-medium text-gray-500">
-                          {format(new Date(service.scheduledDate), "dd/MM/yyyy")}
-                        </span>
-                        <span className="text-xs text-gray-400">•</span>
-                        <span className="text-xs font-medium text-gray-500">
-                          {format(new Date(service.scheduledDate), "HH:mm")}
-                        </span>
-                      </div>
-                      <h3 className="text-base font-semibold text-gray-900">
-                        {service.clientName}
-                      </h3>
-                    </div>
-                    <span className="text-base font-bold text-gray-900">
-                      {formatPrice(service.price)}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <Badge
-                      variant="outline"
-                      className={`text-xs font-medium px-2.5 py-0.5 rounded-full border ${getTypeColor(service.type)}`}
-                    >
-                      {getServiceTypeLabel(service.type)}
-                    </Badge>
-                    <Badge
-                      variant="outline"
-                      className={`text-xs font-medium px-2.5 py-0.5 rounded-full border ${getStatusColor(service.status)}`}
-                    >
-                      {getServiceStatusLabel(service.status)}
-                    </Badge>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </>
         ) : (
-          <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
-            <p className="text-sm text-gray-500">
-              No hay servicios registrados
-            </p>
-          </div>
+          <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)} className="w-full">
+            <TabsList className="grid w-full max-w-md grid-cols-2 mb-4">
+              <TabsTrigger value="pending" className="gap-2">
+                <span>Pendientes</span>
+                <Badge variant="secondary" className="ml-1 px-1.5 py-0 text-xs">
+                  {pendingServices.length}
+                </Badge>
+              </TabsTrigger>
+              <TabsTrigger value="archived" className="gap-2">
+                <Archive className="h-4 w-4" />
+                <span>Archivados</span>
+                <Badge variant="secondary" className="ml-1 px-1.5 py-0 text-xs">
+                  {archivedServices.length}
+                </Badge>
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="pending" className="mt-0">
+              {renderServicesList(pendingServices)}
+            </TabsContent>
+
+            <TabsContent value="archived" className="mt-0">
+              {renderServicesList(archivedServices)}
+            </TabsContent>
+          </Tabs>
         )}
       </div>
 
