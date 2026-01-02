@@ -52,27 +52,6 @@ export async function GET(request: NextRequest) {
     const startDate = searchParams.get("startDate")
     const endDate = searchParams.get("endDate")
 
-    // Auto-archivar servicios cuya fecha programada ya pasó (hace más de 1 día)
-    // Usamos la zona horaria de Chile (America/Santiago)
-    const now = new Date()
-    const chileTime = new Date(now.toLocaleString("en-US", { timeZone: "America/Santiago" }))
-    const yesterday = new Date(chileTime)
-    yesterday.setDate(yesterday.getDate() - 1)
-    yesterday.setHours(0, 0, 0, 0)
-
-    await prisma.service.updateMany({
-      where: {
-        organizationId,
-        archived: false,
-        scheduledDate: {
-          lt: yesterday,
-        },
-      },
-      data: {
-        archived: true,
-      },
-    })
-
     const services = await prisma.service.findMany({
       where: {
         organizationId,

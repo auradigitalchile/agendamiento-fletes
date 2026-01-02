@@ -26,7 +26,7 @@ import {
 export default function ServicesPage() {
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [selectedService, setSelectedService] = useState<Service | undefined>()
-  const [activeTab, setActiveTab] = useState<"pending" | "archived">("pending")
+  const [activeTab, setActiveTab] = useState<"pending" | "completed">("pending")
   const { toast } = useToast()
   const queryClient = useQueryClient()
 
@@ -36,12 +36,12 @@ export default function ServicesPage() {
     queryFn: () => getServices(),
   })
 
-  // Separar servicios en pendientes y archivados
+  // Separar servicios en pendientes y completados
   const pendingServices = useMemo(() => {
     return services?.filter((s: any) => !s.archived) || []
   }, [services])
 
-  const archivedServices = useMemo(() => {
+  const completedServices = useMemo(() => {
     return services?.filter((s: any) => s.archived) || []
   }, [services])
 
@@ -82,6 +82,31 @@ export default function ServicesPage() {
       toast({
         title: "Error",
         description: "No se pudo actualizar el servicio",
+        variant: "destructive",
+      })
+    },
+  })
+
+  // Mutation para marcar servicio como completado
+  const toggleCompleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const response = await fetch(`/api/services/${id}/toggle-complete`, {
+        method: "PATCH",
+      })
+      if (!response.ok) throw new Error("Error al cambiar estado")
+      return response.json()
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["services"] })
+      toast({
+        title: "Estado actualizado",
+        description: "El servicio ha sido actualizado exitosamente",
+      })
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar el estado del servicio",
         variant: "destructive",
       })
     },
@@ -140,7 +165,7 @@ export default function ServicesPage() {
           <p className="text-sm text-gray-500">
             {activeTab === "pending"
               ? "No hay servicios pendientes"
-              : "No hay servicios archivados"}
+              : "No hay servicios completados"}
           </p>
         </div>
       )
@@ -216,14 +241,29 @@ export default function ServicesPage() {
                       </Badge>
                     </td>
                     <td className="px-4 py-2.5 text-right">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEdit(service)}
-                        className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <Pencil className="h-3.5 w-3.5" />
-                      </Button>
+                      <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEdit(service)}
+                          className="h-8 w-8 p-0"
+                          title="Editar"
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            toggleCompleteMutation.mutate(service.id)
+                          }}
+                          className="h-8 w-8 p-0"
+                          title={service.archived ? "Marcar como pendiente" : "Marcar como completado"}
+                        >
+                          <Archive className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -325,11 +365,11 @@ export default function ServicesPage() {
                   {pendingServices.length}
                 </Badge>
               </TabsTrigger>
-              <TabsTrigger value="archived" className="gap-2">
+              <TabsTrigger value="completed" className="gap-2">
                 <Archive className="h-4 w-4" />
-                <span>Archivados</span>
+                <span>Completados</span>
                 <Badge variant="secondary" className="ml-1 px-1.5 py-0 text-xs">
-                  {archivedServices.length}
+                  {completedServices.length}
                 </Badge>
               </TabsTrigger>
             </TabsList>
@@ -338,8 +378,8 @@ export default function ServicesPage() {
               {renderServicesList(pendingServices)}
             </TabsContent>
 
-            <TabsContent value="archived" className="mt-0">
-              {renderServicesList(archivedServices)}
+            <TabsContent value="completed" className="mt-0">
+              {renderServicesList(completedServices)}
             </TabsContent>
           </Tabs>
         )}
