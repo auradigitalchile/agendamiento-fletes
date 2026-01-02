@@ -6,6 +6,7 @@ export interface Service {
   status: "PENDIENTE" | "CONFIRMADO" | "FINALIZADO" | "CANCELADO"
   scheduledDate: string
   price: number
+  archived: boolean
 
   // Datos del cliente (inline)
   clientName: string
