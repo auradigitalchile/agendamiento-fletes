@@ -34,11 +34,14 @@ export default function HomePage() {
   const queryClient = useQueryClient()
 
   // Query para obtener servicios con filtros
-  const { data: services, isLoading } = useQuery({
+  const { data: allServices, isLoading } = useQuery({
     queryKey: ["services", typeFilter],
     queryFn: () =>
       getServices(typeFilter !== "all" ? { type: typeFilter } : undefined),
   })
+
+  // Filtrar solo servicios no archivados para el calendario
+  const services = allServices?.filter((s) => !s.archived)
 
   // Mutation para crear servicio
   const createMutation = useMutation({
