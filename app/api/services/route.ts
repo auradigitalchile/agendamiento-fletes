@@ -101,11 +101,20 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const validatedData = serviceSchema.parse(body)
 
+    // Asegurar que la fecha se interprete correctamente
+    let scheduledDate: Date
+    if (typeof validatedData.scheduledDate === 'string') {
+      // Si viene como string, convertir a Date directamente
+      scheduledDate = new Date(validatedData.scheduledDate)
+    } else {
+      scheduledDate = validatedData.scheduledDate as Date
+    }
+
     const service = await prisma.service.create({
       data: {
         ...validatedData,
         organizationId,
-        scheduledDate: new Date(validatedData.scheduledDate),
+        scheduledDate,
       } as any,
       include: {
         client: true,
