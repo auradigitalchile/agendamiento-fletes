@@ -51,6 +51,17 @@ export async function POST(request: NextRequest) {
     const organizationId = await getOrganizationId()
     const body = await request.json()
 
+    // Obtener fecha actual en zona horaria de Chile si no se proporciona
+    let movementDate: Date
+    if (body.date) {
+      movementDate = new Date(body.date)
+    } else {
+      // Usar zona horaria de Chile para la fecha actual
+      const now = new Date()
+      const chileTime = new Date(now.toLocaleString("en-US", { timeZone: "America/Santiago" }))
+      movementDate = chileTime
+    }
+
     const movement = await prisma.cashMovement.create({
       data: {
         organizationId,
@@ -61,7 +72,7 @@ export async function POST(request: NextRequest) {
         category: body.category || null,
         description: body.description || null,
         relatedService: body.relatedService || null,
-        date: body.date ? new Date(body.date) : new Date(),
+        date: movementDate,
       },
     })
 

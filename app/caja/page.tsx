@@ -150,7 +150,14 @@ export default function CajaPage() {
       })
       return
     }
-    createMutation.mutate(formData as CreateCashMovementDTO)
+
+    // Asegurar que se use la fecha actual de Chile si no se especifica
+    const dataToSubmit = {
+      ...formData,
+      date: formData.date || new Date().toISOString(),
+    }
+
+    createMutation.mutate(dataToSubmit as CreateCashMovementDTO)
   }
 
   return (
