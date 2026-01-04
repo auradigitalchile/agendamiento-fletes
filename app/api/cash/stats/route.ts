@@ -15,11 +15,24 @@ export async function GET(request: NextRequest) {
     const startDateParam = searchParams.get("startDate")
     const endDateParam = searchParams.get("endDate")
 
-    // Por defecto: últimos 30 días
-    const endDate = endDateParam ? new Date(endDateParam) : new Date()
-    const startDate = startDateParam
-      ? new Date(startDateParam)
-      : subWeeks(endDate, 4)
+    // Convertir fechas a zona horaria de Chile para consultas correctas
+    let endDate: Date
+    let startDate: Date
+
+    if (endDateParam) {
+      const endDateUTC = new Date(endDateParam)
+      endDate = new Date(endDateUTC.toLocaleString("en-US", { timeZone: "America/Santiago" }))
+    } else {
+      const now = new Date()
+      endDate = new Date(now.toLocaleString("en-US", { timeZone: "America/Santiago" }))
+    }
+
+    if (startDateParam) {
+      const startDateUTC = new Date(startDateParam)
+      startDate = new Date(startDateUTC.toLocaleString("en-US", { timeZone: "America/Santiago" }))
+    } else {
+      startDate = subWeeks(endDate, 4)
+    }
 
     const where = {
       organizationId,

@@ -12,18 +12,23 @@ export async function GET(request: NextRequest) {
   try {
     const organizationId = await getOrganizationId()
     const { searchParams } = new URL(request.url)
-    const startDate = searchParams.get("startDate")
-    const endDate = searchParams.get("endDate")
+    const startDateParam = searchParams.get("startDate")
+    const endDateParam = searchParams.get("endDate")
     const type = searchParams.get("type")
 
     const where: any = { organizationId }
 
-    if (startDate) {
-      where.date = { ...where.date, gte: startOfDay(new Date(startDate)) }
+    // Usar zona horaria de Chile para consultas de fechas
+    if (startDateParam) {
+      const startDateUTC = new Date(startDateParam)
+      const startDateChile = new Date(startDateUTC.toLocaleString("en-US", { timeZone: "America/Santiago" }))
+      where.date = { ...where.date, gte: startOfDay(startDateChile) }
     }
 
-    if (endDate) {
-      where.date = { ...where.date, lte: endOfDay(new Date(endDate)) }
+    if (endDateParam) {
+      const endDateUTC = new Date(endDateParam)
+      const endDateChile = new Date(endDateUTC.toLocaleString("en-US", { timeZone: "America/Santiago" }))
+      where.date = { ...where.date, lte: endOfDay(endDateChile) }
     }
 
     if (type) {
