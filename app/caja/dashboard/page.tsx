@@ -1,14 +1,18 @@
 "use client"
 
+import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
-import { format, subDays } from "date-fns"
+import { format, subDays, startOfMonth, endOfMonth } from "date-fns"
 import {
   TrendingUp,
   TrendingDown,
   Wallet,
   PiggyBank,
+  Calendar,
 } from "lucide-react"
 import { Card } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { getCashStats } from "@/lib/api/cash"
 import { formatPrice } from "@/lib/utils"
 import {
@@ -30,14 +34,19 @@ import {
 const COLORS = ["#3b82f6", "#8b5cf6", "#10b981", "#f59e0b", "#ef4444"]
 
 export default function DashboardPage() {
-  // Obtener estadísticas del último mes
+  const [selectedMonth, setSelectedMonth] = useState(format(new Date(), "yyyy-MM"))
+
+  // Obtener estadísticas del mes seleccionado
   const { data: stats, isLoading } = useQuery({
-    queryKey: ["cash-stats"],
-    queryFn: () =>
-      getCashStats({
-        startDate: subDays(new Date(), 30).toISOString(),
-        endDate: new Date().toISOString(),
-      }),
+    queryKey: ["cash-stats", selectedMonth],
+    queryFn: () => {
+      const startDate = startOfMonth(new Date(selectedMonth + "-01"))
+      const endDate = endOfMonth(new Date(selectedMonth + "-01"))
+      return getCashStats({
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+      })
+    },
   })
 
   if (isLoading) {
@@ -71,8 +80,27 @@ export default function DashboardPage() {
             Dashboard Financiero
           </h1>
           <p className="text-sm text-gray-500 mt-0.5">
-            Resumen de los últimos 30 días
+            Análisis financiero mensual
           </p>
+        </div>
+
+        {/* Filtro de mes */}
+        <div className="bg-white rounded-xl border border-gray-200 p-4">
+          <div className="flex items-center gap-4">
+            <Calendar className="h-5 w-5 text-gray-400" />
+            <div className="flex-1">
+              <Label htmlFor="selectedMonth" className="text-sm font-medium text-gray-700">
+                Seleccionar Mes y Año
+              </Label>
+              <Input
+                id="selectedMonth"
+                type="month"
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(e.target.value)}
+                className="mt-1 max-w-xs"
+              />
+            </div>
+          </div>
         </div>
 
         {/* KPIs */}
