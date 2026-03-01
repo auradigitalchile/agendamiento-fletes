@@ -54,6 +54,22 @@ export async function PATCH(
       )
     }
 
+    // Verificar si el día está cerrado
+    const { startOfDay } = await import("date-fns")
+    const dailyClose = await prisma.dailyClose.findFirst({
+      where: {
+        organizationId,
+        date: startOfDay(existingMovement.date),
+      },
+    })
+
+    if (dailyClose && dailyClose.status === "CLOSED") {
+      return NextResponse.json(
+        { error: "No se puede editar un movimiento en un día cerrado. Use ajustes contables." },
+        { status: 403 }
+      )
+    }
+
     const movement = await prisma.cashMovement.update({
       where: { id: params.id },
       data: {
@@ -94,6 +110,22 @@ export async function DELETE(
       return NextResponse.json(
         { error: "Movimiento no encontrado" },
         { status: 404 }
+      )
+    }
+
+    // Verificar si el día está cerrado
+    const { startOfDay } = await import("date-fns")
+    const dailyClose = await prisma.dailyClose.findFirst({
+      where: {
+        organizationId,
+        date: startOfDay(existingMovement.date),
+      },
+    })
+
+    if (dailyClose && dailyClose.status === "CLOSED") {
+      return NextResponse.json(
+        { error: "No se puede eliminar un movimiento en un día cerrado. Use ajustes contables." },
+        { status: 403 }
       )
     }
 
