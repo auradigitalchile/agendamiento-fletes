@@ -47,6 +47,7 @@ model Organization {
   dailyCloses      DailyClose[]
   transferAccounts TransferAccount[]
   categories       Category[]
+  configuration    Configuration?
 
   @@index([slug])
   @@map("organizations")
@@ -263,12 +264,20 @@ model CashMovement {
   organizationId    String           // Multi-tenant
   type              CashMovementType // INGRESO o GASTO
   amount            Float
-  method            PaymentMethod    // EFECTIVO o TRANSFERENCIA
+  method            PaymentMethod    // EFECTIVO, TRANSFERENCIA, TARJETA, OTRO
   transferAccountId String?          // ID de cuenta de transferencia (cuando method = TRANSFERENCIA)
   category          String?          // Categoría del movimiento (ej: "Servicio", "Combustible", "Mantención")
   description       String?          @db.Text
   relatedService    String?          // ID del servicio relacionado (opcional)
   date              DateTime         @default(now())
+
+  // Campos para ajustes contables
+  isAdjustment       Boolean         @default(false)
+  adjustmentReason   String?         @db.Text
+  relatedMovementId  String?
+  relatedMovement    CashMovement?   @relation("Adjustments", fields: [relatedMovementId], references: [id], onDelete: SetNull)
+  adjustments        CashMovement[]  @relation("Adjustments")
+
   createdAt         DateTime         @default(now())
   updatedAt         DateTime         @updatedAt
 
@@ -281,6 +290,7 @@ model CashMovement {
   @@index([type])
   @@index([method])
   @@index([transferAccountId])
+  @@index([relatedMovementId])
   @@map("cash_movements")
 }
 
@@ -289,6 +299,9 @@ model DailyClose {
   id             String   @id @default(cuid())
   organizationId String   // Multi-tenant
   date           DateTime @unique // Fecha del cierre (sin hora)
+
+  // Estado del día
+  status         DayStatus @default(OPEN)
 
   // Totales por método de pago
   totalCash              Float    @default(0) // Total en efectivo
@@ -307,6 +320,7 @@ model DailyClose {
 
   // Quien hizo el cierre
   closedBy       String?  // User ID
+  closedAt       DateTime? // Fecha y hora del cierre
 
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
@@ -316,7 +330,21 @@ model DailyClose {
 
   @@index([organizationId])
   @@index([date])
+  @@index([status])
   @@map("daily_closes")
+}
+
+// Configuración de la organización
+model Configuration {
+  id                  String   @id @default(cuid())
+  organizationId      String   @unique
+  startTrackingDate   DateTime // Fecha inicio contabilidad
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("configurations")
 }
 
 // ========================================
@@ -329,6 +357,11 @@ enum UserRole {
   MEMBER // Miembro regular
 }
 
+enum DayStatus {
+  OPEN
+  CLOSED
+}
+
 enum CashMovementType {
   INGRESO
   GASTO
@@ -337,6 +370,8 @@ enum CashMovementType {
 enum PaymentMethod {
   EFECTIVO
   TRANSFERENCIA
+  TARJETA
+  OTRO
 }
 
 enum ServiceType {
