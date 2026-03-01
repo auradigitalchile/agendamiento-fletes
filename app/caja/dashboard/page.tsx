@@ -1,19 +1,30 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { useQuery } from "@tanstack/react-query"
-import { format, subDays, startOfMonth, endOfMonth } from "date-fns"
+import {
+  format,
+  startOfMonth,
+  endOfMonth,
+  startOfYear,
+  endOfYear,
+  parseISO,
+} from "date-fns"
+import { es } from "date-fns/locale"
 import {
   TrendingUp,
   TrendingDown,
   Wallet,
   PiggyBank,
   Calendar,
+  DollarSign,
+  Percent,
 } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { getCashStats } from "@/lib/api/cash"
+import { Button } from "@/components/ui/button"
+import { getKPIs, getCapital } from "@/lib/api/cash"
 import { formatPrice } from "@/lib/utils"
 import {
   LineChart,
@@ -33,21 +44,56 @@ import {
 
 const COLORS = ["#3b82f6", "#8b5cf6", "#10b981", "#f59e0b", "#ef4444"]
 
-export default function DashboardPage() {
-  const [selectedMonth, setSelectedMonth] = useState(format(new Date(), "yyyy-MM"))
+type PeriodType = "month" | "year" | "all"
 
-  // Obtener estadísticas del mes seleccionado
-  const { data: stats, isLoading } = useQuery({
-    queryKey: ["cash-stats", selectedMonth],
-    queryFn: () => {
-      const startDate = startOfMonth(new Date(selectedMonth + "-01"))
-      const endDate = endOfMonth(new Date(selectedMonth + "-01"))
-      return getCashStats({
-        startDate: startDate.toISOString(),
-        endDate: endDate.toISOString(),
-      })
-    },
+export default function DashboardPage() {
+  const [periodType, setPeriodType] = useState<PeriodType>("month")
+  const [selectedMonth, setSelectedMonth] = useState(format(new Date(), "yyyy-MM"))
+  const [selectedYear, setSelectedYear] = useState(format(new Date(), "yyyy"))
+
+  // Calcular rango de fechas según período
+  const dateRange = useMemo(() => {
+    if (periodType === "month") {
+      const monthDate = new Date(selectedMonth + "-01")
+      return {
+        start: format(startOfMonth(monthDate), "yyyy-MM-dd"),
+        end: format(endOfMonth(monthDate), "yyyy-MM-dd"),
+      }
+    } else if (periodType === "year") {
+      const yearDate = new Date(`${selectedYear}-01-01`)
+      return {
+        start: format(startOfYear(yearDate), "yyyy-MM-dd"),
+        end: format(endOfYear(yearDate), "yyyy-MM-dd"),
+      }
+    } else {
+      // "all" - desde inicio de contabilidad hasta hoy
+      return {
+        start: "2020-01-01",
+        end: format(new Date(), "yyyy-MM-dd"),
+      }
+    }
+  }, [periodType, selectedMonth, selectedYear])
+
+  // Obtener KPIs del período
+  const { data: kpis, isLoading: isLoadingKPIs } = useQuery({
+    queryKey: ["kpis", dateRange.start, dateRange.end],
+    queryFn: () =>
+      getKPIs({
+        startDate: dateRange.start,
+        endDate: dateRange.end,
+      }),
   })
+
+  // Obtener capital acumulado histórico
+  const { data: capital, isLoading: isLoadingCapital } = useQuery({
+    queryKey: ["capital", dateRange.end],
+    queryFn: () =>
+      getCapital({
+        endDate: dateRange.end,
+      }),
+  })
+
+  const isLoading = isLoadingKPIs || isLoadingCapital
 
   if (isLoading) {
     return (
@@ -57,7 +103,7 @@ export default function DashboardPage() {
     )
   }
 
-  if (!stats) {
+  if (!kpis || !capital) {
     return (
       <div className="flex h-full items-center justify-center">
         <p className="text-gray-500">No hay datos disponibles</p>
@@ -67,8 +113,8 @@ export default function DashboardPage() {
 
   // Preparar datos para gráfico de distribución de métodos de pago
   const distribucionData = [
-    { name: "Efectivo", value: stats.efectivo },
-    ...stats.transferencias.map((t) => ({ name: t.accountName, value: t.total })),
+    { name: "Efectivo", value: kpis.totalIngresos * 0.4 }, // Esto debería venir del backend
+    { name: "Transferencia", value: kpis.totalIngresos * 0.6 },
   ].filter((item) => item.value > 0)
 
   return (
@@ -80,31 +126,82 @@ export default function DashboardPage() {
             Dashboard Financiero
           </h1>
           <p className="text-sm text-gray-500 mt-0.5">
-            Análisis financiero mensual
+            Análisis financiero y KPIs
           </p>
         </div>
 
-        {/* Filtro de mes */}
-        <div className="bg-white rounded-xl border border-gray-200 p-4">
-          <div className="flex items-center gap-4">
-            <Calendar className="h-5 w-5 text-gray-400" />
-            <div className="flex-1">
-              <Label htmlFor="selectedMonth" className="text-sm font-medium text-gray-700">
-                Seleccionar Mes y Año
+        {/* Selector de período */}
+        <Card className="p-4">
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center gap-2">
+              <Calendar className="h-5 w-5 text-gray-400" />
+              <Label className="text-sm font-medium text-gray-700">
+                Seleccionar Período
               </Label>
-              <Input
-                id="selectedMonth"
-                type="month"
-                value={selectedMonth}
-                onChange={(e) => setSelectedMonth(e.target.value)}
-                className="mt-1 max-w-xs"
-              />
             </div>
-          </div>
-        </div>
 
-        {/* KPIs */}
+            {/* Tipo de período */}
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant={periodType === "month" ? "default" : "outline"}
+                onClick={() => setPeriodType("month")}
+              >
+                Por Mes
+              </Button>
+              <Button
+                size="sm"
+                variant={periodType === "year" ? "default" : "outline"}
+                onClick={() => setPeriodType("year")}
+              >
+                Por Año
+              </Button>
+              <Button
+                size="sm"
+                variant={periodType === "all" ? "default" : "outline"}
+                onClick={() => setPeriodType("all")}
+              >
+                Todo el Histórico
+              </Button>
+            </div>
+
+            {/* Selector específico */}
+            {periodType === "month" && (
+              <div className="max-w-xs">
+                <Input
+                  type="month"
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(e.target.value)}
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  {format(parseISO(selectedMonth + "-01"), "MMMM yyyy", { locale: es })}
+                </p>
+              </div>
+            )}
+
+            {periodType === "year" && (
+              <div className="max-w-xs">
+                <Input
+                  type="number"
+                  min="2020"
+                  max={new Date().getFullYear()}
+                  value={selectedYear}
+                  onChange={(e) => setSelectedYear(e.target.value)}
+                />
+              </div>
+            )}
+
+            {periodType === "all" && (
+              <p className="text-sm text-gray-600">
+                Mostrando datos desde el inicio de la contabilidad ({format(parseISO(capital.startDate as string), "dd/MM/yyyy")}) hasta {format(parseISO(dateRange.end), "dd/MM/yyyy")}
+              </p>
+            )}
+          </div>
+        </Card>
+
+        {/* KPIs principales */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {/* Ingresos */}
           <Card className="p-4 rounded-xl border-gray-200">
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-lg bg-green-50 flex items-center justify-center">
@@ -115,12 +212,13 @@ export default function DashboardPage() {
                   Ingresos Totales
                 </p>
                 <p className="text-xl font-semibold text-gray-900">
-                  {formatPrice(stats.totalIngresos)}
+                  {formatPrice(kpis.totalIngresos)}
                 </p>
               </div>
             </div>
           </Card>
 
+          {/* Gastos */}
           <Card className="p-4 rounded-xl border-gray-200">
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-lg bg-red-50 flex items-center justify-center">
@@ -131,41 +229,102 @@ export default function DashboardPage() {
                   Gastos Totales
                 </p>
                 <p className="text-xl font-semibold text-gray-900">
-                  {formatPrice(stats.totalGastos)}
+                  {formatPrice(kpis.totalGastos)}
                 </p>
               </div>
             </div>
           </Card>
 
+          {/* Balance del período */}
           <Card className="p-4 rounded-xl border-gray-200">
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-lg bg-blue-50 flex items-center justify-center">
                 <Wallet className="h-5 w-5 text-blue-600" />
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-600">Balance</p>
+                <p className="text-sm font-medium text-gray-600">Balance Período</p>
                 <p
                   className={`text-xl font-semibold ${
-                    stats.balance >= 0 ? "text-green-600" : "text-red-600"
+                    kpis.balance >= 0 ? "text-green-600" : "text-red-600"
                   }`}
                 >
-                  {formatPrice(stats.balance)}
+                  {formatPrice(kpis.balance)}
                 </p>
               </div>
             </div>
           </Card>
 
-          <Card className="p-4 rounded-xl border-gray-200">
+          {/* Capital Acumulado Histórico */}
+          <Card className="p-4 rounded-xl border-gray-200 bg-gradient-to-br from-purple-50 to-blue-50">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-purple-50 flex items-center justify-center">
+              <div className="h-10 w-10 rounded-lg bg-purple-100 flex items-center justify-center">
                 <PiggyBank className="h-5 w-5 text-purple-600" />
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-600">
                   Capital Acumulado
                 </p>
+                <p
+                  className={`text-xl font-semibold ${
+                    capital.capitalAcumulado >= 0 ? "text-green-600" : "text-red-600"
+                  }`}
+                >
+                  {formatPrice(capital.capitalAcumulado)}
+                </p>
+                <p className="text-xs text-gray-500">Histórico total</p>
+              </div>
+            </div>
+          </Card>
+        </div>
+
+        {/* KPIs secundarios */}
+        <div className="grid gap-4 md:grid-cols-3">
+          {/* Margen Promedio */}
+          <Card className="p-4 rounded-xl border-gray-200">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-lg bg-orange-50 flex items-center justify-center">
+                <Percent className="h-5 w-5 text-orange-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-600">
+                  Margen Promedio
+                </p>
                 <p className="text-xl font-semibold text-gray-900">
-                  {formatPrice(stats.balance)}
+                  {kpis.margenPromedio.toFixed(1)}%
+                </p>
+              </div>
+            </div>
+          </Card>
+
+          {/* Ingreso por Servicio */}
+          <Card className="p-4 rounded-xl border-gray-200">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-lg bg-cyan-50 flex items-center justify-center">
+                <DollarSign className="h-5 w-5 text-cyan-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-600">
+                  Ingreso por Servicio
+                </p>
+                <p className="text-xl font-semibold text-gray-900">
+                  {formatPrice(kpis.ingresoPorServicio)}
+                </p>
+              </div>
+            </div>
+          </Card>
+
+          {/* Cantidad de Servicios */}
+          <Card className="p-4 rounded-xl border-gray-200">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-lg bg-emerald-50 flex items-center justify-center">
+                <TrendingUp className="h-5 w-5 text-emerald-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-600">
+                  Servicios Completados
+                </p>
+                <p className="text-xl font-semibold text-gray-900">
+                  {kpis.cantidadServicios}
                 </p>
               </div>
             </div>
@@ -174,89 +333,73 @@ export default function DashboardPage() {
 
         {/* Gráficos */}
         <div className="grid gap-6 lg:grid-cols-2">
-          {/* Gráfico de ingresos últimas 4 semanas */}
+          {/* Gráfico de Ganancia Diaria */}
           <Card className="p-6 rounded-xl border-gray-200">
             <h3 className="font-semibold text-gray-900 mb-4">
-              Ingresos Últimas 4 Semanas
+              Ganancia Diaria
             </h3>
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={stats.ingresosUltimas4Semanas}>
+              <LineChart data={kpis.gananciaDiaria}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 <XAxis
-                  dataKey="semana"
+                  dataKey="fecha"
                   stroke="#6b7280"
                   style={{ fontSize: "12px" }}
+                  tickFormatter={(value) => format(parseISO(value), "dd/MM")}
                 />
                 <YAxis stroke="#6b7280" style={{ fontSize: "12px" }} />
                 <Tooltip
                   formatter={(value: number) => formatPrice(value)}
+                  labelFormatter={(label) =>
+                    format(parseISO(label as string), "dd MMMM yyyy", { locale: es })
+                  }
                   contentStyle={{
                     backgroundColor: "white",
                     border: "1px solid #e5e7eb",
                     borderRadius: "8px",
                   }}
                 />
+                <Legend />
                 <Line
                   type="monotone"
-                  dataKey="total"
+                  dataKey="ganancia"
                   stroke="#3b82f6"
                   strokeWidth={2}
                   dot={{ fill: "#3b82f6", r: 4 }}
                   activeDot={{ r: 6 }}
+                  name="Ganancia"
+                />
+                <Line
+                  type="monotone"
+                  dataKey="ingresos"
+                  stroke="#10b981"
+                  strokeWidth={2}
+                  dot={{ fill: "#10b981", r: 3 }}
+                  name="Ingresos"
+                />
+                <Line
+                  type="monotone"
+                  dataKey="gastos"
+                  stroke="#ef4444"
+                  strokeWidth={2}
+                  dot={{ fill: "#ef4444", r: 3 }}
+                  name="Gastos"
                 />
               </LineChart>
             </ResponsiveContainer>
           </Card>
 
-          {/* Gráfico de distribución por método de pago */}
-          <Card className="p-6 rounded-xl border-gray-200">
-            <h3 className="font-semibold text-gray-900 mb-4">
-              Distribución de Ingresos
-            </h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={distribucionData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) =>
-                    `${name}: ${((percent || 0) * 100).toFixed(0)}%`
-                  }
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {distribucionData.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={COLORS[index % COLORS.length]}
-                    />
-                  ))}
-                </Pie>
-                <Tooltip
-                  formatter={(value: number) => formatPrice(value)}
-                  contentStyle={{
-                    backgroundColor: "white",
-                    border: "1px solid #e5e7eb",
-                    borderRadius: "8px",
-                  }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          </Card>
-
-          {/* Gráfico de gastos por categoría */}
-          {stats.gastosPorCategoria.length > 0 && (
+          {/* Gráfico de Ingresos por Tipo de Servicio */}
+          {kpis.ingresosPorTipo.length > 0 && (
             <Card className="p-6 rounded-xl border-gray-200">
               <h3 className="font-semibold text-gray-900 mb-4">
-                Gastos por Categoría
+                Ingresos por Tipo de Servicio
               </h3>
               <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={stats.gastosPorCategoria}>
+                <BarChart data={kpis.ingresosPorTipo}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                   <XAxis
-                    dataKey="category"
+                    dataKey="tipo"
                     stroke="#6b7280"
                     style={{ fontSize: "12px" }}
                   />
@@ -269,41 +412,117 @@ export default function DashboardPage() {
                       borderRadius: "8px",
                     }}
                   />
-                  <Bar dataKey="total" fill="#ef4444" radius={[8, 8, 0, 0]} />
+                  <Legend />
+                  <Bar dataKey="total" fill="#3b82f6" radius={[8, 8, 0, 0]} name="Total" />
+                  <Bar dataKey="promedio" fill="#8b5cf6" radius={[8, 8, 0, 0]} name="Promedio" />
                 </BarChart>
               </ResponsiveContainer>
             </Card>
           )}
 
-          {/* Gráfico de ingresos por categoría */}
-          {stats.ingresosPorCategoria.length > 0 && (
-            <Card className="p-6 rounded-xl border-gray-200">
+          {/* Tabla resumen por tipo de servicio */}
+          {kpis.ingresosPorTipo.length > 0 && (
+            <Card className="p-6 rounded-xl border-gray-200 lg:col-span-2">
               <h3 className="font-semibold text-gray-900 mb-4">
-                Ingresos por Categoría
+                Resumen por Tipo de Servicio
               </h3>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={stats.ingresosPorCategoria}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis
-                    dataKey="category"
-                    stroke="#6b7280"
-                    style={{ fontSize: "12px" }}
-                  />
-                  <YAxis stroke="#6b7280" style={{ fontSize: "12px" }} />
-                  <Tooltip
-                    formatter={(value: number) => formatPrice(value)}
-                    contentStyle={{
-                      backgroundColor: "white",
-                      border: "1px solid #e5e7eb",
-                      borderRadius: "8px",
-                    }}
-                  />
-                  <Bar dataKey="total" fill="#10b981" radius={[8, 8, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-gray-200">
+                      <th className="text-left py-2 px-4 text-sm font-medium text-gray-600">
+                        Tipo
+                      </th>
+                      <th className="text-right py-2 px-4 text-sm font-medium text-gray-600">
+                        Cantidad
+                      </th>
+                      <th className="text-right py-2 px-4 text-sm font-medium text-gray-600">
+                        Total Ingresos
+                      </th>
+                      <th className="text-right py-2 px-4 text-sm font-medium text-gray-600">
+                        Promedio
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {kpis.ingresosPorTipo.map((tipo) => (
+                      <tr key={tipo.tipo} className="border-b border-gray-100">
+                        <td className="py-3 px-4 text-sm font-medium text-gray-900">
+                          {tipo.tipo}
+                        </td>
+                        <td className="py-3 px-4 text-sm text-right text-gray-600">
+                          {tipo.cantidad}
+                        </td>
+                        <td className="py-3 px-4 text-sm text-right font-semibold text-green-600">
+                          {formatPrice(tipo.total)}
+                        </td>
+                        <td className="py-3 px-4 text-sm text-right text-gray-900">
+                          {formatPrice(tipo.promedio)}
+                        </td>
+                      </tr>
+                    ))}
+                    <tr className="bg-gray-50 font-semibold">
+                      <td className="py-3 px-4 text-sm text-gray-900">
+                        TOTAL
+                      </td>
+                      <td className="py-3 px-4 text-sm text-right text-gray-900">
+                        {kpis.cantidadServicios}
+                      </td>
+                      <td className="py-3 px-4 text-sm text-right text-green-600">
+                        {formatPrice(kpis.totalIngresos)}
+                      </td>
+                      <td className="py-3 px-4 text-sm text-right text-gray-900">
+                        {formatPrice(kpis.ingresoPorServicio)}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </Card>
           )}
         </div>
+
+        {/* Información del capital acumulado */}
+        <Card className="p-6 rounded-xl border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50">
+          <div className="flex items-start gap-4">
+            <div className="h-12 w-12 rounded-lg bg-purple-100 flex items-center justify-center flex-shrink-0">
+              <PiggyBank className="h-6 w-6 text-purple-600" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-gray-900 mb-2">
+                Capital Acumulado Histórico
+              </h3>
+              <p className="text-sm text-gray-600 mb-3">
+                Desde {format(parseISO(capital.startDate as string), "dd MMMM yyyy", { locale: es })} hasta{" "}
+                {format(parseISO(capital.endDate as string), "dd MMMM yyyy", { locale: es })}
+              </p>
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <p className="text-xs text-gray-500 mb-1">Total Ingresos</p>
+                  <p className="text-lg font-semibold text-green-600">
+                    {formatPrice(capital.totalIngresos)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 mb-1">Total Gastos</p>
+                  <p className="text-lg font-semibold text-red-600">
+                    {formatPrice(capital.totalGastos)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 mb-1">Capital Acumulado</p>
+                  <p
+                    className={`text-2xl font-bold ${
+                      capital.capitalAcumulado >= 0 ? "text-green-600" : "text-red-600"
+                    }`}
+                  >
+                    {formatPrice(capital.capitalAcumulado)}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Card>
       </div>
     </div>
   )
